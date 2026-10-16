@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ff9ec7">
+<title>Наскільки ти знаєш нас? 💕</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pink-50:#fff0f6; --pink-100:#ffdeeb; --pink-200:#ffc2d9; --pink-300:#ff9ec7;
+    --pink-400:#ff74ad; --pink-500:#f0509a; --pink-700:#a82d66; --ink:#5b2342;
+    --ok:#3ecf8e; --bad:#ff6b81; --card:#ffffffd9;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%}
+  body{
+    font-family:'Fredoka',system-ui,sans-serif; color:var(--ink);
+    background:linear-gradient(160deg,#ffe3ef 0%,#ffc2d9 50%,#ffd6e8 100%) fixed;
+    min-height:100dvh; overflow-x:hidden;
+    padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+  }
+  #hearts{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+  .float{position:absolute;bottom:-40px;animation:rise linear forwards;opacity:.7}
+  @keyframes rise{to{transform:translateY(-115vh) rotate(25deg);opacity:0}}
+
+  main{position:relative;z-index:1;max-width:520px;margin:0 auto;padding:20px 0 40px;min-height:100dvh;display:flex;flex-direction:column;justify-content:center}
+  .card{
+    background:var(--card);backdrop-filter:blur(8px);border-radius:28px;padding:26px 22px;
+    box-shadow:0 10px 0 var(--pink-300),0 20px 40px #f0509a40;border:3px solid #fff;
+    animation:pop .45s cubic-bezier(.2,1.4,.4,1);
+  }
+  @keyframes pop{from{transform:scale(.85) translateY(20px);opacity:0}to{transform:none;opacity:1}}
+  h1{font-family:'Pacifico',cursive;font-weight:400;font-size:2.1rem;line-height:1.25;margin:0 0 10px;color:var(--pink-500);text-align:center}
+  h2{font-size:1.35rem;line-height:1.3;margin:0 0 18px;text-align:center}
+  p{line-height:1.5;margin:0 0 14px}
+  .center{text-align:center}
+  .big-emoji{font-size:4.2rem;text-align:center;animation:bob 2s ease-in-out infinite;display:block;margin-bottom:6px}
+  @keyframes bob{50%{transform:translateY(-8px) rotate(4deg)}}
+
+  input[type=text]{
+    width:100%;font:inherit;font-size:1.1rem;padding:14px 18px;border-radius:18px;
+    border:3px solid var(--pink-200);background:#fff;color:var(--ink);outline:none;text-align:center;margin-bottom:14px;
+  }
+  input[type=text]:focus{border-color:var(--pink-400)}
+
+  .btn{
+    display:block;width:100%;font:inherit;font-weight:600;font-size:1.1rem;color:#fff;
+    background:linear-gradient(180deg,var(--pink-400),var(--pink-500));border:0;border-radius:20px;
+    padding:15px 18px;cursor:pointer;box-shadow:0 6px 0 var(--pink-700);transition:transform .1s,box-shadow .1s;
+  }
+  .btn:active{transform:translateY(5px);box-shadow:0 1px 0 var(--pink-700)}
+  .btn.ghost{background:#fff;color:var(--pink-500);box-shadow:0 6px 0 var(--pink-200);margin-top:14px}
+  .btn.ghost:active{box-shadow:0 1px 0 var(--pink-200)}
+
+  /* HUD */
+  .hud{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;font-weight:600}
+  .pill{background:#fff;border-radius:99px;padding:6px 14px;box-shadow:0 3px 0 var(--pink-200);font-size:.95rem;white-space:nowrap}
+  .bar{height:14px;background:#fff;border-radius:99px;overflow:hidden;margin-bottom:18px;box-shadow:inset 0 2px 4px #f0509a30}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pink-300),var(--pink-500));border-radius:99px;transition:width .5s cubic-bezier(.2,1.2,.4,1)}
+
+  .opt{
+    display:block;width:100%;text-align:left;font:inherit;font-size:1.05rem;color:var(--ink);
+    background:#fff;border:3px solid var(--pink-200);border-radius:18px;padding:13px 16px;margin-bottom:11px;
+    cursor:pointer;box-shadow:0 4px 0 var(--pink-200);transition:transform .1s,background .2s,border-color .2s;
+  }
+  .opt:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 var(--pink-200)}
+  .opt.correct{background:#d9fbe9;border-color:var(--ok);box-shadow:0 4px 0 #2aa972;animation:jump .5s}
+  .opt.wrong{background:#ffe0e5;border-color:var(--bad);box-shadow:0 4px 0 #d6455d;animation:shake .45s}
+  .opt.gone{opacity:.25;text-decoration:line-through}
+  .opt:disabled{cursor:default}
+  @keyframes jump{40%{transform:scale(1.05)}}
+  @keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+
+  .hint{background:none;border:0;font:inherit;color:var(--pink-500);font-weight:600;cursor:pointer;display:block;margin:6px auto 0;padding:6px}
+  .hint:disabled{opacity:.4;cursor:default}
+
+  .feedback{margin-top:8px;padding:14px;border-radius:18px;text-align:center;font-weight:500;animation:pop .35s}
+  .feedback.ok{background:#d9fbe9}
+  .feedback.no{background:#ffe0e5}
+
+  /* runaway */
+  .arena{position:relative;height:180px;margin-bottom:10px}
+  .arena .btn{position:absolute;width:auto;padding:14px 28px}
+  #yes{left:8%;top:30px;transition:transform .2s}
+  #no{right:8%;top:30px;background:linear-gradient(180deg,#b5b5c3,#8e8ea0);box-shadow:0 6px 0 #6b6b7b;transition:left .15s,top .15s}
+
+  /* result */
+  .score{font-size:3.4rem;font-weight:700;color:var(--pink-500);text-align:center;line-height:1}
+  .rank{font-family:'Pacifico',cursive;font-size:1.6rem;text-align:center;margin:8px 0 14px;color:var(--pink-700)}
+  .recap{margin:16px 0 0;padding:0;list-style:none;font-size:.95rem}
+  .recap li{display:flex;gap:8px;padding:7px 0;border-bottom:2px dashed var(--pink-200)}
+  .recap li:last-child{border:0}
+  .recap b{font-weight:600}
+
+  .conf{position:fixed;top:-20px;z-index:10;pointer-events:none;animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(112vh) rotate(720deg)}}
+
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}}
+</style>
+</head>
+<body>
+<div id="hearts" aria-hidden="true"></div>
+<main id="app"></main>
+
+<script>
+/* =====================================================================
+   ✏️  ТУТ РЕДАГУЄМО ПИТАННЯ  ✏️
+   - q      : текст питання
+   - emoji  : емоджі до питання
+   - options: варіанти. ПЕРШИЙ ВАРІАНТ = ПРАВИЛЬНА ВІДПОВІДЬ
+              (на сайті вони перемішуються автоматично)
+   - ok     : що написати, якщо вгадала
+   - no     : що написати, якщо помилилась
+   Зараз правильні відповіді — заглушки, їх треба замінити на справжні!
+   ===================================================================== */
+const HER_NAME_FALLBACK = "красуня";
+
+const QUESTIONS = [
+  { emoji:"👀", q:"Де ми вперше з'явились в житті одне одного?",
+    options:["[Справжнє місце знайомства]","У ліфті, де ти мовчав(ла) 12 поверхів","На зустрічі анонімних любителів піци","В очереді за шаурмою"],
+    ok:"Це ж початок нашої історії! 🥹", no:"Ну як так, це ж найперший рівень гри! 🙈" },
+
+  { emoji:"💬", q:"Хто першим написав повідомлення?",
+    options:["Я","Ти","Ми одночасно (телепатія!)","Мамин кіт з телефону"],
+    ok:"Так, так! Сміливість міст бере 😎", no:"Ай-яй, треба було краще пам'ятати 😅" },
+
+  { emoji:"☕", q:"Куди ми пішли на перше побачення?",
+    options:["[Справжнє місце побачення]","На парковку, дивитись на машини","У музей старих утюгів","На ринок за картоплею"],
+    ok:"Романтика на максималках ✨", no:"Побачення було цілком нормальне, чесно! 😂" },
+
+  { emoji:"💋", q:"Де ми вперше поцілувались?",
+    options:["[Справжнє місце першого поцілунку]","У поліції (довга історія)","На стоянці біля магазину","Під час розбору фільму про динозаврів"],
+    ok:"Ти це пам'ятаєш!! Я розтанув(ла) 🫠", no:"Серйозно?! Такий момент — і не пам'ятаєш? 😤💕" },
+
+  { emoji:"🍕", q:"Що ми замовили на нашому першому спільному вечері?",
+    options:["[Що саме їли]","Тарілку тиші","Суші, але без суші","Борщ з ананасами"],
+    ok:"Гурман-детектив! 🕵️‍♀️", no:"Мізки на каві, видно 🥲" },
+
+  { emoji:"📱", q:"Як я записаний(а) у твоєму телефоні?",
+    options:["[Як записаний у неї]","Не відповідати!!!","Мій найкращий WiFi","Доставка щастя"],
+    ok:"Ну звісно ти знаєш, це ж ТВІЙ телефон 😄", no:"Ну ти ж знаєш... перевір контакти 📞" },
+
+  { emoji:"🎵", q:"Яка наша пісня?",
+    options:["[Назва пісні]","Вухо-вухо пісня про лося","Гімн піцерії","Мелодія будильника"],
+    ok:"Включаємо і танцюємо 💃🕺", no:"Ну тепер доведеться переслухати разом 🎶" },
+
+  { emoji:"🙈", q:"Що найбільше мене в тобі… захоплює (і трошки бісить)?",
+    options:["[Милий недолік]","Те, що ти завжди права","Те, що ти завжди права, навіть коли ні","Нічого, ти ідеальна (брехня, але мила)"],
+    ok:"Прямо в ціль 🎯", no:"Ми ще це обговоримо 😏" },
+
+  { emoji:"📅", q:"Коли офіційно почались наші стосунки?",
+    options:["[Дата]","В день, коли я вперше помив(ла) посуд","Коли вирішили, що ми пара","Ніколи, ми просто сусіди"],
+    ok:"Календар в голові — як у президента 📆", no:"Дати — це не твоє, але ми любимо тебе і так ❤️" },
+
+  { emoji:"✈️", q:"Куди ми мрієм поїхати разом?",
+    options:["[Мрія про подорож]","На Місяць (але з валізою)","До бабусі на борщ","В Антарктиду погрітись"],
+    ok:"Збираємо чемодани! 🧳", no:"Ну вже й мрійники ми, видно 🌍" }
+];
+
+/* Фінальний бос — runaway-кнопка (не змінювати без потреби) */
+const BOSS = { emoji:"👑", q:"ФІНАЛЬНЕ ПИТАННЯ: чи любиш ти мене?" };
+
+/* Звання за результатом (поріг у відсотках) */
+const RANKS = [
+  { min:100, title:"Королева нашої історії 👑", text:"Ідеально!! Ти знаєш нас краще, ніж ми самі. Подарунок: обійми без ліміту 🤗" },
+  { min:80,  title:"Агент Кохання 007 🕵️‍♀️", text:"Майже ідеально! Піцу за мій рахунок, і ми квити 🍕" },
+  { min:60,  title:"Дуже мила, але забудькувата 🧸", text:"Нормально! Але нагадай-ка, як звати твого коханого? Жартую… майже 😅" },
+  { min:30,  title:"Амнезія-принцеса 🥴", text:"Треба терміново влаштувати побачення для освіження пам'яті 💕" },
+  { min:0,   title:"Ми щойно познайомились? 🫣", text:"Що ж, значить, час починати з початку. Привіт, я твій хлопець! 🙋‍♂️" }
+];
+
+/* ===================================================================== */
+const $app = document.getElementById('app');
+const state = { name:"", i:0, score:0, streak:0, bestStreak:0, hints:3, log:[], answered:false };
+const POINTS = 100, STREAK_BONUS = 25;
+
+/* helpers */
+const el = (tag, props={}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k,v] of Object.entries(props)) {
+    if (k==='class') n.className=v; else if (k==='text') n.textContent=v;
+    else if (k.startsWith('on')) n.addEventListener(k.slice(2), v); else n.setAttribute(k,v);
+  }
+  kids.flat().forEach(c => n.append(c));
+  return n;
+};
+const shuffle = a => { a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]} return a; };
+const pick = a => a[Math.random()*a.length|0];
+const total = () => QUESTIONS.length + 1;
+function render(...nodes){ $app.replaceChildren(...nodes); window.scrollTo({top:0}); }
+const vibrate = ms => { try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){} };
+
+/* background hearts */
+const heartLayer = document.getElementById('hearts');
+setInterval(() => {
+  const h = el('span',{class:'float',text:pick(['💗','💖','💕','🌸','✨','🎀'])});
+  h.style.left = Math.random()*100+'vw';
+  h.style.fontSize = (14+Math.random()*22)+'px';
+  h.style.animationDuration = (7+Math.random()*7)+'s';
+  heartLayer.append(h); setTimeout(()=>h.remove(),15000);
+}, 700);
+
+/* confetti */
+function confetti(n=70){
+  const set=['💖','🌸','✨','🎀','💕','🩷','⭐'];
+  for(let i=0;i<n;i++){
+    const c=el('span',{class:'conf',text:pick(set)});
+    c.style.left=Math.random()*100+'vw';
+    c.style.fontSize=(16+Math.random()*20)+'px';
+    c.style.animationDuration=(2+Math.random()*2.5)+'s';
+    c.style.animationDelay=(Math.random()*.6)+'s';
+    document.body.append(c); setTimeout(()=>c.remove(),5500);
+  }
+}
+
+/* ---------- screens ---------- */
+function startScreen(){
+  const input = el('input',{type:'text',placeholder:"Як тебе звати, сонечко?",maxlength:"24",autocomplete:"off"});
+  const go = () => { state.name = input.value.trim() || HER_NAME_FALLBACK; introScreen(); };
+  input.addEventListener('keydown',e=>{ if(e.key==='Enter') go(); });
+  render(el('div',{class:'card'},
+    el('span',{class:'big-emoji',text:'💘'}),
+    el('h1',{text:'Наскільки ти знаєш нас?'}),
+    el('p',{class:'center',text:'Гра-опитування для однієї дуже особливої людини. Всього '+total()+' рівнів. Призи — солодкі. Образи — не приймаються 😌'}),
+    input,
+    el('button',{class:'btn',text:'Почати гру 🎮',onclick:go})
+  ));
+}
+
+function introScreen(){
+  render(el('div',{class:'card center'},
+    el('span',{class:'big-emoji',text:'🎀'}),
+    el('h2',{text:`Привіт, ${state.name}!`}),
+    el('p',{text:'Правила прості:'}),
+    el('p',{text:'✅ Правильна відповідь = 100 очок'}),
+    el('p',{text:'🔥 Серія правильних = бонусні очки'}),
+    el('p',{text:'💡 У тебе 3 підказки (вони прибирають 2 неправильні відповіді)'}),
+    el('p',{text:'👑 В кінці чекає фінальний бос…'}),
+    el('button',{class:'btn',text:'Поїхали! 🚀',onclick:()=>{ Object.assign(state,{i:0,score:0,streak:0,bestStreak:0,hints:3,log:[]}); questionScreen(); }})
+  ));
+}
+
+function hud(){
+  return [
+    el('div',{class:'hud'},
+      el('span',{class:'pill',text:`Рівень ${state.i+1}/${total()}`}),
+      el('span',{class:'pill',id:'streak',text: state.streak>1 ? `🔥 x${state.streak}` : '🔥 —'}),
+      el('span',{class:'pill',text:`⭐ ${state.score}`})
+    ),
+    (()=>{const b=el('div',{class:'bar'},el('i'));requestAnimationFrame(()=>requestAnimationFrame(()=>b.firstChild.style.width=(state.i/total()*100)+'%'));return b;})()
+  ];
+}
+
+function questionScreen(){
+  if(state.i >= QUESTIONS.length) return bossScreen();
+  const Q = QUESTIONS[state.i];
+  state.answered = false;
+  const correct = Q.options[0];
+  const opts = shuffle(Q.options);
+  const btns = opts.map(o => {
+    const b = el('button',{class:'opt',text:o});
+    b.addEventListener('click',()=>answer(b,o===correct));
+    return b;
+  });
+  const fb = el('div');
+  const hintBtn = el('button',{class:'hint',text:`💡 Підказка (${state.hints})`});
+  if(!state.hints) hintBtn.disabled = true;
+  hintBtn.addEventListener('click',()=>{
+    if(state.answered||!state.hints) return;
+    state.hints--;
+    shuffle(btns.filter(b=>b.textContent!==correct)).slice(0,2).forEach(b=>{b.classList.add('gone');b.disabled=true;});
+    hintBtn.textContent=`💡 Підказка (${state.hints})`; hintBtn.disabled=true;
+  });
+
+  function answer(btn, isRight){
+    if(state.answered) return; state.answered = true;
+    btns.forEach(b=>{ b.disabled=true; if(b.textContent===correct) b.classList.add('correct'); });
+    hintBtn.disabled = true;
+    let gain = 0;
+    if(isRight){
+      state.streak++; state.bestStreak=Math.max(state.bestStreak,state.streak);
+      gain = POINTS + (state.streak>1 ? STREAK_BONUS*(state.streak-1) : 0);
+      state.score += gain; confetti(24); vibrate(30);
+    } else {
+      btn.classList.add('wrong'); state.streak = 0; vibrate([60,40,60]);
+    }
+    state.log.push({q:Q.q,right:isRight,answer:correct});
+    fb.replaceChildren(
+      el('div',{class:'feedback '+(isRight?'ok':'no'),text:(isRight?`+${gain} очок! `:'Мимо! ')+(isRight?Q.ok:Q.no)}),
+      el('button',{class:'btn',style:'margin-top:14px',text: state.i===QUESTIONS.length-1?'До фінального боса 👑':'Далі ➡️',onclick:()=>{state.i++;questionScreen();}})
+    );
+  }
+
+  render(el('div',{class:'card'}, ...hud(),
+    el('span',{class:'big-emoji',text:Q.emoji}),
+    el('h2',{text:Q.q}), ...btns, hintBtn, fb));
+}
+
+function bossScreen(){
+  const arena = el('div',{class:'arena'});
+  const yes = el('button',{class:'btn',id:'yes',text:'Так 💖'});
+  const no  = el('button',{class:'btn',id:'no',text:'Ні'});
+  let dodges = 0, scale = 1;
+  const noTexts = ['Ні','Ти впевнена?','Подумай ще!','Точно ні?','Не тисни!','Ну будь ласка 🥺','Я ж плакати буду','Ок, ні… 😭'];
+  const flee = e => {
+    if(e) e.preventDefault();
+    dodges++; scale = Math.min(scale+0.18, 2.2);
+    yes.style.transform = `scale(${scale})`;
+    no.textContent = noTexts[Math.min(dodges, noTexts.length-1)];
+    const w = arena.clientWidth - no.offsetWidth, h = arena.clientHeight - no.offsetHeight;
+    no.style.right = 'auto';
+    no.style.left = Math.random()*w+'px';
+    no.style.top  = Math.random()*h+'px';
+    vibrate(15);
+  };
+  no.addEventListener('mouseenter',flee);
+  no.addEventListener('touchstart',flee,{passive:false});
+  no.addEventListener('click',flee);
+  yes.addEventListener('click',()=>{
+    state.score += 500; state.streak++; state.log.push({q:BOSS.q,right:true,answer:'Так 💖'});
+    state.i++; confetti(120); vibrate([40,30,40,30,80]); resultScreen();
+  });
+  arena.append(yes,no);
+  render(el('div',{class:'card'}, ...hud(),
+    el('span',{class:'big-emoji',text:BOSS.emoji}),
+    el('h2',{text:BOSS.q}),
+    arena,
+    el('p',{class:'center',text:'(Кнопка «Ні» трохи сором\'язлива, не лови її 😇)'})));
+}
+
+function resultScreen(){
+  const correctCount = state.log.filter(l=>l.right).length;
+  const pct = Math.round(correctCount/total()*100);
+  const rank = RANKS.find(r=>pct>=r.min);
+  const wrong = state.log.filter(l=>!l.right);
+  const recap = el('ul',{class:'recap'},
+    wrong.length ? wrong.map(l=>el('li',{},el('span',{text:'🙈'}),el('span',{},el('b',{text:l.q}),el('br'),`Правильно: ${l.answer}`)))
+                 : el('li',{text:'Жодної помилки! Ти — легенда 🏆'}));
+  render(el('div',{class:'card'},
+    el('span',{class:'big-emoji',text:'🏆'}),
+    el('div',{class:'score',text:`${state.score}`}),
+    el('p',{class:'center',text:`очок • ${correctCount}/${total()} правильних • найкраща серія 🔥${state.bestStreak}`}),
+    el('div',{class:'rank',text:rank.title}),
+    el('p',{class:'center',text:`${state.name}, ${rank.text}`}),
+    wrong.length ? el('h2',{text:'Над чим працюємо:'}) : '',
+    recap,
+    el('button',{class:'btn',style:'margin-top:20px',text:'Зіграти ще раз 🔁',onclick:introScreen}),
+    el('button',{class:'btn ghost',text:'Показати результат коханому 📸',onclick:()=>confetti(80)})
+  ));
+}
+
+startScreen();
+</script>
+</body>
+</html>
