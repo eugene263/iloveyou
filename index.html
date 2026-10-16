@@ -128,6 +128,20 @@
   .ach small{display:block;font-size:.7rem;line-height:1.1;margin-top:2px}
   .ticket{border:4px dashed var(--pink-400);border-radius:22px;background:#fff;padding:18px;margin-bottom:6px}
   .ticket p{margin:0 0 8px}
+
+  .srow{background:#fff;border:3px solid var(--pink-200);border-radius:18px;padding:12px 14px;margin-bottom:12px}
+  .shead{display:flex;justify-content:space-between;font-size:1.1rem;margin-bottom:8px;font-weight:500}
+  .sval{color:var(--pink-500);min-width:3.2ch;text-align:right}
+  .strack{position:relative;height:12px;margin:12px 0 18px}
+  .szone{position:absolute;z-index:2;top:-2px;height:16px;background:#3ecf8e66;border-radius:99px;border:2px solid var(--ok);pointer-events:none;animation:pop .4s}
+  .sres{margin-top:6px;font-size:.9rem;font-weight:500;text-align:center}
+  .sres.ok{color:#1f9d63}.sres.no{color:#d6455d}
+  input[type=range]{-webkit-appearance:none;appearance:none;position:relative;z-index:1;width:100%;height:12px;background:transparent;margin:0;display:block;touch-action:pan-y}
+  input[type=range]::-webkit-slider-runnable-track{height:12px;border-radius:99px;background:var(--pink-100)}
+  input[type=range]::-moz-range-track{height:12px;border-radius:99px;background:var(--pink-100)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;margin-top:-9px;border-radius:50%;background:var(--pink-500);border:4px solid #fff;box-shadow:0 3px 0 var(--pink-700)}
+  input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--pink-500);border:4px solid #fff;box-shadow:0 3px 0 var(--pink-700)}
+  input[type=range]:disabled{opacity:.9}
 </style>
 </head>
 <body>
@@ -168,6 +182,17 @@ const QUESTIONS = [
     options:["[Що саме їли]","Тарілку тиші","Суші, але без суші","Борщ з ананасами"],
     ok:"Гурман-детектив! 🕵️‍♀️", no:"Мізки на каві, видно 🥲" },
 
+  /* 🎚️ ПИТАННЯ З ПОВЗУНКАМИ: items[].answer — правильний відсоток (0-100).
+     Похибка TOLERANCE (за замовч. 10) в обидва боки. Заміни answer на справжні! */
+  { type:"slider", emoji:"🍕", q:"Наскільки сильно я люблю…? (влучи в % з похибкою ±10)",
+    tolerance:10,
+    items:[
+      { emoji:"🍕", label:"Піцу",      answer:90 },
+      { emoji:"🫐", label:"Чорнослив", answer:35 },
+      { emoji:"🥔", label:"Пюрешку",   answer:75 }
+    ],
+    ok:"Ти знаєш мій смак краще за мене 🍽️", no:"Ну, гастрономічні вподобання — штука тонка 😅" },
+
   { emoji:"📱", q:"Як я записаний(а) у твоєму телефоні?",
     options:["[Як записаний у неї]","Не відповідати!!!","Мій найкращий WiFi","Доставка щастя"],
     ok:"Ну звісно ти знаєш, це ж ТВІЙ телефон 😄", no:"Ну ти ж знаєш... перевір контакти 📞" },
@@ -200,6 +225,7 @@ const INVITE = {
 
 /* 🏅 Ачівки */
 const ACH = {
+  slider: ["🎯","Знавець смаків","Влучила в усі повзунки"],
   fire:   ["🔥","Серія з 5","5 правильних підряд"],
   nohints:["🧠","Без підказок","Пройшла всю гру без жодної підказки"],
   perfect:["👑","Ідеально","Жодної помилки"],
@@ -313,9 +339,52 @@ function hud(){
   ];
 }
 
+function sliderScreen(Q){
+  state.answered = false;
+  const tol = Q.tolerance ?? 10, PER = 40;
+  const rows = Q.items.map(it => {
+    const out = el('b',{class:'sval',text:'50%'});
+    const inp = el('input',{type:'range',min:'0',max:'100',value:'50',step:'1'});
+    inp.addEventListener('input',()=>{ out.textContent=inp.value+'%'; });
+    const res = el('div',{class:'sres'});
+    const track = el('div',{class:'strack'},inp);
+    return { it, inp, res, node: el('div',{class:'srow'},
+      el('div',{class:'shead'},el('span',{text:`${it.emoji} ${it.label}`}),out), track, res) };
+  });
+  const fb = el('div');
+  const check = el('button',{class:'btn',text:'Перевірити ✅'});
+  check.addEventListener('click',()=>{
+    if(state.answered) return; state.answered = true; check.remove();
+    let hits = 0;
+    rows.forEach(r => {
+      const v = +r.inp.value, a = r.it.answer, ok = Math.abs(v-a) <= tol;
+      r.inp.disabled = true; if(ok) hits++;
+      const zone = el('i',{class:'szone'}); zone.style.left = Math.max(0,a-tol)+'%'; zone.style.width = (Math.min(100,a+tol)-Math.max(0,a-tol))+'%';
+      r.node.querySelector('.strack').prepend(zone);
+      r.res.className = 'sres '+(ok?'ok':'no');
+      r.res.textContent = ok ? `✅ Влучила! Правильно ${a}%` : `❌ Ти: ${v}%, правильно: ${a}%`;
+    });
+    const isRight = hits === rows.length;
+    const gain = hits*PER + (isRight ? POINTS-hits*PER+ (state.streak>0?STREAK_BONUS*state.streak:0) : 0);
+    state.score += gain;
+    if(isRight){ state.streak++; state.bestStreak=Math.max(state.bestStreak,state.streak); confetti(30); vibrate(30); if(state.streak>=5) award('fire'); award('slider'); }
+    else { state.streak = 0; if(hits===0){ state.lives--; } vibrate([60,40,60]); }
+    state.log.push({q:Q.q,right:isRight,answer:Q.items.map(x=>`${x.label} ${x.answer}%`).join(', ')});
+    fb.replaceChildren(
+      el('div',{class:'feedback '+(isRight?'ok':'no'),text:`${hits}/${rows.length} влучань, +${gain} очок. `+(isRight?Q.ok:Q.no)}),
+      el('button',{class:'btn',style:'margin-top:14px',text: state.lives<=0 ? '💔 Серця закінчились…' : state.i===QUESTIONS.length-1?'До фінального боса 👑':'Далі ➡️',onclick: state.lives<=0 ? reviveScreen : afterQuestion}));
+  });
+  render(el('div',{class:'card'}, ...hud(),
+    el('span',{class:'big-emoji',text:Q.emoji}),
+    el('h2',{text:Q.q}),
+    el('p',{class:'center',style:'font-size:.9rem',text:'Посунь повзунки туди, де, на твою думку, мій відсоток любові 👇'}),
+    ...rows.map(r=>r.node), check, fb));
+}
+
 function questionScreen(){
   if(state.i >= QUESTIONS.length) return bossScreen();
   const Q = QUESTIONS[state.i];
+  if(Q.type==='slider') return sliderScreen(Q);
   state.answered = false;
   const correct = Q.options[0];
   const opts = shuffle(Q.options);
