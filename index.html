@@ -117,6 +117,17 @@
   .mc.up{background:#fff;color:inherit;transform:rotateY(0)}
   .mc.done{background:#d9fbe9;border-color:var(--ok);box-shadow:none}
   .kbd{display:inline-block;background:var(--pink-100);border-radius:8px;padding:2px 10px;font-weight:600;box-shadow:0 3px 0 var(--pink-200)}
+
+  .toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:20;background:#fff;border:3px solid var(--pink-400);border-radius:18px;padding:10px 18px;box-shadow:0 6px 0 var(--pink-300);text-align:center;animation:toast 3.2s forwards;max-width:90vw}
+  .toast small{display:block;font-size:.8rem;opacity:.8}
+  @keyframes toast{0%{transform:translate(-50%,-90px)}10%,85%{transform:translate(-50%,0)}100%{transform:translate(-50%,-120px)}}
+  .qphoto{display:block;width:100%;max-height:260px;object-fit:cover;border-radius:20px;border:4px solid #fff;box-shadow:0 6px 0 var(--pink-200);margin:0 auto 14px}
+  .achs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}
+  .ach{background:var(--pink-100);border-radius:14px;padding:8px 4px;opacity:.55;font-size:1.6rem;text-align:center}
+  .ach.on{background:#fff;opacity:1;box-shadow:0 3px 0 var(--pink-300)}
+  .ach small{display:block;font-size:.7rem;line-height:1.1;margin-top:2px}
+  .ticket{border:4px dashed var(--pink-400);border-radius:22px;background:#fff;padding:18px;margin-bottom:6px}
+  .ticket p{margin:0 0 8px}
 </style>
 </head>
 <body>
@@ -178,6 +189,28 @@ const QUESTIONS = [
     ok:"Збираємо чемодани! 🧳", no:"Ну вже й мрійники ми, видно 🌍" }
 ];
 
+/* 🎟️ Фінальний сюрприз — запрошення на справжнє побачення (заповни!) */
+const INVITE = {
+  title: "Запрошення на побачення",
+  when:  "[Дата і час]",
+  where: "[Місце]",
+  note:  "Дрес-код: гарний настрій. Беру з собою обійми і піцу 💕",
+  photo: ""            // шлях до вашого фото, напр. "photos/us.jpg" (можна лишити порожнім)
+};
+
+/* 🏅 Ачівки */
+const ACH = {
+  fire:   ["🔥","Серія з 5","5 правильних підряд"],
+  nohints:["🧠","Без підказок","Пройшла всю гру без жодної підказки"],
+  perfect:["👑","Ідеально","Жодної помилки"],
+  cat:    ["🐱","Котолюбка","Повністю нагодувала котика"],
+  hearts: ["💖","Магніт любові","15+ сердечок"],
+  sniper: ["💋","Снайпер","3 поцілунки з 3"],
+  memory: ["🃏","Слон","Мемо за мінімум ходів"],
+  boss:   ["🏃","Неспіймана","Довго ганяла кнопку «Ні»"],
+  survivor:["❤️‍🩹","Воскресла","Повернулась у гру після 0 сердець"]
+};
+
 /* Фінальний бос — runaway-кнопка (не змінювати без потреби) */
 const BOSS = { emoji:"👑", q:"ФІНАЛЬНЕ ПИТАННЯ: чи любиш ти мене?" };
 
@@ -192,7 +225,7 @@ const RANKS = [
 
 /* ===================================================================== */
 const $app = document.getElementById('app');
-const state = { name:"", i:0, score:0, streak:0, bestStreak:0, hints:3, log:[], answered:false };
+const state = { name:"", i:0, score:0, streak:0, bestStreak:0, hints:3, log:[], answered:false, lives:3, ach:new Set(), dodges:0 };
 const POINTS = 100, STREAK_BONUS = 25;
 
 /* helpers */
@@ -207,6 +240,12 @@ const el = (tag, props={}, ...kids) => {
 };
 const shuffle = a => { a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]} return a; };
 const pick = a => a[Math.random()*a.length|0];
+function award(id){
+  if(state.ach.has(id)) return; state.ach.add(id);
+  const [e,t,d]=ACH[id];
+  const n=el('div',{class:'toast'},el('b',{text:`${e} Ачівка: ${t}`}),el('small',{text:d}));
+  document.body.append(n); setTimeout(()=>n.remove(),3200);
+}
 const total = () => QUESTIONS.length + 1;
 function render(...nodes){ $app.replaceChildren(...nodes); window.scrollTo({top:0}); }
 const vibrate = ms => { try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){} };
@@ -258,7 +297,7 @@ function introScreen(){
     el('p',{text:'🎮 Між питаннями — міні-ігри з бонусними очками'}),
     el('p',{text:'💡 У тебе 3 підказки (вони прибирають 2 неправильні відповіді)'}),
     el('p',{text:'👑 В кінці чекає фінальний бос…'}),
-    el('button',{class:'btn',text:'Поїхали! 🚀',onclick:()=>{ Object.assign(state,{i:0,score:0,streak:0,bestStreak:0,hints:3,log:[]}); questionScreen(); }})
+    el('button',{class:'btn',text:'Поїхали! 🚀',onclick:()=>{ Object.assign(state,{i:0,score:0,streak:0,bestStreak:0,hints:3,log:[],lives:3,ach:new Set(),dodges:0}); questionScreen(); }})
   ));
 }
 
@@ -266,6 +305,7 @@ function hud(){
   return [
     el('div',{class:'hud'},
       el('span',{class:'pill',text:`Рівень ${state.i+1}/${total()}`}),
+      el('span',{class:'pill',text:'❤️'.repeat(state.lives)+'🖤'.repeat(Math.max(0,3-state.lives))}),
       el('span',{class:'pill',id:'streak',text: state.streak>1 ? `🔥 x${state.streak}` : '🔥 —'}),
       el('span',{class:'pill',text:`⭐ ${state.score}`})
     ),
@@ -302,19 +342,19 @@ function questionScreen(){
     if(isRight){
       state.streak++; state.bestStreak=Math.max(state.bestStreak,state.streak);
       gain = POINTS + (state.streak>1 ? STREAK_BONUS*(state.streak-1) : 0);
-      state.score += gain; confetti(24); vibrate(30);
+      state.score += gain; confetti(24); vibrate(30); if(state.streak>=5) award('fire');
     } else {
-      btn.classList.add('wrong'); state.streak = 0; vibrate([60,40,60]);
+      btn.classList.add('wrong'); state.streak = 0; state.lives--; vibrate([60,40,60]);
     }
     state.log.push({q:Q.q,right:isRight,answer:correct});
     fb.replaceChildren(
       el('div',{class:'feedback '+(isRight?'ok':'no'),text:(isRight?`+${gain} очок! `:'Мимо! ')+(isRight?Q.ok:Q.no)}),
-      el('button',{class:'btn',style:'margin-top:14px',text: state.i===QUESTIONS.length-1?'До фінального боса 👑':'Далі ➡️',onclick:afterQuestion})
+      el('button',{class:'btn',style:'margin-top:14px',text: state.lives<=0 ? '💔 Серця закінчились…' : state.i===QUESTIONS.length-1?'До фінального боса 👑':'Далі ➡️',onclick: state.lives<=0 ? reviveScreen : afterQuestion})
     );
   }
 
   render(el('div',{class:'card'}, ...hud(),
-    el('span',{class:'big-emoji',text:Q.emoji}),
+    Q.photo ? el('img',{class:'qphoto',src:Q.photo,alt:''}) : el('span',{class:'big-emoji',text:Q.emoji}),
     el('h2',{text:Q.q}), ...btns, hintBtn, fb));
 }
 
@@ -326,7 +366,7 @@ function bossScreen(){
   const noTexts = ['Ні','Ти впевнена?','Подумай ще!','Точно ні?','Не тисни!','Ну будь ласка 🥺','Я ж плакати буду','Ок, ні… 😭'];
   const flee = e => {
     if(e) e.preventDefault();
-    dodges++; scale = Math.min(scale+0.18, 2.2);
+    dodges++; state.dodges=dodges; if(dodges>=8) award('boss'); scale = Math.min(scale+0.18, 2.2);
     yes.style.transform = `scale(${scale})`;
     no.textContent = noTexts[Math.min(dodges, noTexts.length-1)];
     const w = arena.clientWidth - no.offsetWidth, h = arena.clientHeight - no.offsetHeight;
@@ -350,6 +390,18 @@ function bossScreen(){
     el('p',{class:'center',text:'(Кнопка «Ні» трохи сором\'язлива, не лови її 😇)'})));
 }
 
+function ticketScreen(){
+  confetti(100); vibrate([40,30,40]);
+  render(el('div',{class:'card center'},
+    el('div',{class:'ticket'},
+      INVITE.photo ? el('img',{class:'qphoto',src:INVITE.photo,alt:''}) : el('span',{class:'big-emoji',text:'🎟️'}),
+      el('div',{class:'rank',text:INVITE.title}),
+      el('p',{},el('b',{text:'Для: '}),state.name),
+      el('p',{},el('b',{text:'Коли: '}),INVITE.when),
+      el('p',{},el('b',{text:'Де: '}),INVITE.where),
+      el('p',{text:INVITE.note})),
+    el('button',{class:'btn ghost',text:'⬅️ Назад до результатів',onclick:resultScreen})));
+}
 function resultScreen(){
   const correctCount = state.log.filter(l=>l.right).length;
   const pct = Math.round(correctCount/total()*100);
@@ -364,6 +416,12 @@ function resultScreen(){
     el('p',{class:'center',text:`очок • ${correctCount}/${total()} правильних • найкраща серія 🔥${state.bestStreak}`}),
     el('div',{class:'rank',text:rank.title}),
     el('p',{class:'center',text:`${state.name}, ${rank.text}`}),
+    (()=>{ if(!wrong.length) award('perfect'); if(state.hints===3) award('nohints');
+      const ids=Object.keys(ACH);
+      return el('div',{},el('h2',{text:`🏅 Ачівки: ${state.ach.size}/${ids.length}`}),
+        el('div',{class:'achs'},ids.map(id=>el('div',{class:'ach'+(state.ach.has(id)?' on':''),title:ACH[id][2]},
+          el('span',{text:state.ach.has(id)?ACH[id][0]:'🔒'}),el('small',{text:ACH[id][1]})))));})(),
+    el('button',{class:'btn',style:'margin-top:18px',text:'🎁 Відкрити подарунок',onclick:ticketScreen}),
     wrong.length ? el('h2',{text:'Над чим працюємо:'}) : '',
     recap,
     el('button',{class:'btn',style:'margin-top:20px',text:'Зіграти ще раз 🔁',onclick:introScreen}),
@@ -386,18 +444,32 @@ let cleanups = [];
 const onCleanup = f => cleanups.push(f);
 function stopGame(){ cleanups.forEach(f=>{try{f()}catch(e){}}); cleanups = []; }
 
-function afterQuestion(){
-  stopGame();
+function reviveScreen(){
+  render(el('div',{class:'card center'},
+    el('span',{class:'big-emoji',text:'💔'}),
+    el('h2',{text:'Серця закінчились!'}),
+    el('p',{text:'Але ми так просто не здаємось. Нагодуй котика (мінімум 12 рибок), і ти повернешся в гру з одним сердечком 🐱'}),
+    el('button',{class:'btn',text:'Реанімація! 🚑',onclick:()=>gameIntro(gameCat,true)})));
+}
+function afterQuestion(){ stopGame(); proceed(); }
+function proceed(){
   const g = GAMES.find(g=>g.after===state.i+1);
   if(g) return gameIntro(g.run);
   state.i++; questionScreen();
 }
 
 /* shell: intro -> play -> result */
-function gameIntro(run){
+function gameIntro(run, revive){
   run.intro(() => {
     const done = (pts, msg) => {
       stopGame();
+      if(revive){
+        if(pts>=60){ state.lives=1; award('survivor'); confetti(60);
+          return render(el('div',{class:'card center'},el('span',{class:'big-emoji',text:'❤️‍🩹'}),el('h2',{text:'Ти повернулась! +1 ❤️'}),el('p',{text:msg}),
+            el('button',{class:'btn',text:'Продовжуємо ➡️',onclick:proceed}))); }
+        return render(el('div',{class:'card center'},el('span',{class:'big-emoji',text:'😿'}),el('h2',{text:'Котик ще голодний…'}),el('p',{text:msg}),
+          el('button',{class:'btn',text:'Ще раз! 🔁',onclick:()=>gameIntro(gameCat,true)})));
+      }
       state.score += pts; if(pts>=100) confetti(40); vibrate(40);
       render(el('div',{class:'card center'},
         el('span',{class:'big-emoji',text:pts>=100?'🎉':'👍'}),
@@ -432,7 +504,7 @@ function gameCat(done){
     cat.textContent = n<GOAL/3?'😿':n<GOAL*2/3?'😺':'😻';
     cat.classList.add('bump'); setTimeout(()=>cat.classList.remove('bump'),80);
     vibrate(8);
-    if(n>=GOAL) end();
+    if(n>=GOAL){ award('cat'); end(); }
   };
   const key=e=>{ if(e.code==='Space'){e.preventDefault(); if(!e.repeat) press();} };
   document.addEventListener('keydown',key); onCleanup(()=>document.removeEventListener('keydown',key));
@@ -467,6 +539,7 @@ function gameHearts(done){
   const id=setInterval(spawn,450); onCleanup(()=>clearInterval(id));
   function end(){
     if(over) return; over=true;
+    if(n>=15) award('hearts');
     done(Math.min(150,n*10), n>=15?'Сердечок зібрано цілу купу! Ти — магніт для любові 🧲':n>=8?'Непогано! Ще трохи — і була б королева сердечок 💗':'Сердечка втекли, але ти все одно моя найкраща 😘');
   }
   playCard('Лови сердечка!',
@@ -497,6 +570,7 @@ function gameKiss(done){
     if(ok){hits++; vibrate(30);} else vibrate([40,30,40]);
     info.textContent = ok?'💥 ЧМОК!':'🙈 Мимо!';
     if(tries>=MAX){ over=true; cancelAnimationFrame(raf);
+      if(hits===3) award('sniper');
       setTimeout(()=>done(hits*50, hits===3?'Ідеальні три поцілунки з трьох! Профі 😘😘😘':hits?`Влучила ${hits} з ${MAX}. Є над чим тренуватись разом 😏`:'Жодного... доведеться тренуватись в реальному житті 💋'),700);
     } else setTimeout(()=>{ speed+=.5; newZone(); info.textContent=`Спроба ${tries+1}/${MAX}`; },600);
   };
@@ -526,7 +600,7 @@ function gameMemory(done){
         const [a,b]=open;
         if(a.dataset.f===b.dataset.f){
           a.classList.add('done');b.classList.add('done'); found++; open=[]; lock=false;
-          if(found===pairs.length) setTimeout(()=>{ const pts=Math.max(40,200-(moves-pairs.length)*15);
+          if(found===pairs.length) setTimeout(()=>{ if(moves<=pairs.length+3) award('memory'); const pts=Math.max(40,200-(moves-pairs.length)*15);
             done(pts, moves<=pairs.length+3?'Пам\'ять — просто космос! 🧠✨':'Знайшла всі пари. Дякуємо за терпіння 😅'); },500);
         } else setTimeout(()=>{ [a,b].forEach(x=>{x.classList.remove('up');x.textContent='❔'}); open=[]; lock=false; },700);
       }
