@@ -99,6 +99,24 @@
   @keyframes fall{to{transform:translateY(112vh) rotate(720deg)}}
 
   @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}}
+  /* mini-games */
+  .game-box{position:relative;background:#fff;border:3px dashed var(--pink-300);border-radius:22px;padding:14px;margin-bottom:14px;text-align:center;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+  .meter{height:22px;background:var(--pink-100);border-radius:99px;overflow:hidden;margin:10px 0}
+  .meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffb86b,var(--pink-500));transition:width .1s}
+  .cat{font-size:5rem;line-height:1.1;transition:transform .1s}
+  .cat.bump{transform:scale(1.18) rotate(-5deg)}
+  .timer{font-weight:700;font-size:1.3rem;color:var(--pink-500)}
+  .sky{position:relative;height:300px;overflow:hidden;border-radius:16px;background:linear-gradient(#fff6fa,#ffe3ef)}
+  .drop{position:absolute;top:-50px;font-size:2.4rem;cursor:pointer;border:0;background:none;padding:6px;animation:drop linear forwards}
+  @keyframes drop{to{transform:translateY(360px)}}
+  .track{position:relative;height:46px;background:var(--pink-100);border-radius:99px;overflow:hidden;margin:18px 0}
+  .zone{position:absolute;top:0;bottom:0;background:#9af0c4;border-left:3px solid var(--ok);border-right:3px solid var(--ok)}
+  .marker{position:absolute;top:2px;font-size:2.4rem;line-height:1;transform:translateX(-50%)}
+  .mem{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+  .mc{aspect-ratio:1;font-size:2rem;border:3px solid var(--pink-200);border-radius:16px;background:var(--pink-300);color:transparent;cursor:pointer;box-shadow:0 4px 0 var(--pink-400);transition:transform .25s;font:inherit;font-size:2rem}
+  .mc.up{background:#fff;color:inherit;transform:rotateY(0)}
+  .mc.done{background:#d9fbe9;border-color:var(--ok);box-shadow:none}
+  .kbd{display:inline-block;background:var(--pink-100);border-radius:8px;padding:2px 10px;font-weight:600;box-shadow:0 3px 0 var(--pink-200)}
 </style>
 </head>
 <body>
@@ -237,6 +255,7 @@ function introScreen(){
     el('p',{text:'Правила прості:'}),
     el('p',{text:'✅ Правильна відповідь = 100 очок'}),
     el('p',{text:'🔥 Серія правильних = бонусні очки'}),
+    el('p',{text:'🎮 Між питаннями — міні-ігри з бонусними очками'}),
     el('p',{text:'💡 У тебе 3 підказки (вони прибирають 2 неправильні відповіді)'}),
     el('p',{text:'👑 В кінці чекає фінальний бос…'}),
     el('button',{class:'btn',text:'Поїхали! 🚀',onclick:()=>{ Object.assign(state,{i:0,score:0,streak:0,bestStreak:0,hints:3,log:[]}); questionScreen(); }})
@@ -290,7 +309,7 @@ function questionScreen(){
     state.log.push({q:Q.q,right:isRight,answer:correct});
     fb.replaceChildren(
       el('div',{class:'feedback '+(isRight?'ok':'no'),text:(isRight?`+${gain} очок! `:'Мимо! ')+(isRight?Q.ok:Q.no)}),
-      el('button',{class:'btn',style:'margin-top:14px',text: state.i===QUESTIONS.length-1?'До фінального боса 👑':'Далі ➡️',onclick:()=>{state.i++;questionScreen();}})
+      el('button',{class:'btn',style:'margin-top:14px',text: state.i===QUESTIONS.length-1?'До фінального боса 👑':'Далі ➡️',onclick:afterQuestion})
     );
   }
 
@@ -351,6 +370,175 @@ function resultScreen(){
     el('button',{class:'btn ghost',text:'Показати результат коханому 📸',onclick:()=>confetti(80)})
   ));
 }
+/* =====================================================================
+   🎮 МІНІ-ІГРИ між питаннями
+   after — після якого за рахунком питання (1 = після першого) з'являється гра.
+   Можна перемикати місцями/змінювати.
+   ===================================================================== */
+const GAMES = [
+  { after:2,  run:gameCat },
+  { after:4,  run:gameHearts },
+  { after:6,  run:gameKiss },
+  { after:8,  run:gameMemory }
+];
+
+let cleanups = [];
+const onCleanup = f => cleanups.push(f);
+function stopGame(){ cleanups.forEach(f=>{try{f()}catch(e){}}); cleanups = []; }
+
+function afterQuestion(){
+  stopGame();
+  const g = GAMES.find(g=>g.after===state.i+1);
+  if(g) return gameIntro(g.run);
+  state.i++; questionScreen();
+}
+
+/* shell: intro -> play -> result */
+function gameIntro(run){
+  run.intro(() => {
+    const done = (pts, msg) => {
+      stopGame();
+      state.score += pts; if(pts>=100) confetti(40); vibrate(40);
+      render(el('div',{class:'card center'},
+        el('span',{class:'big-emoji',text:pts>=100?'🎉':'👍'}),
+        el('h2',{text:`Міні-гра пройдена! +${pts} ⭐`}),
+        el('p',{text:msg}),
+        el('button',{class:'btn',text:'Далі до питань ➡️',onclick:()=>{ stopGame(); state.i++; questionScreen(); }})));
+    };
+    run(done);
+  });
+}
+function introCard(emoji,title,desc,go){
+  render(el('div',{class:'card center'},
+    el('span',{class:'big-emoji',text:emoji}),
+    el('div',{class:'pill',style:'display:inline-block;margin-bottom:10px',text:'🎮 МІНІ-ГРА'}),
+    el('h2',{text:title}), el('p',{text:desc}),
+    el('button',{class:'btn',text:'Я готова! 💪',onclick:go})));
+}
+function playCard(title,...kids){ render(el('div',{class:'card center'},el('h2',{text:title}),...kids)); }
+function countdown(sec,onTick,onEnd){
+  let t=sec; onTick(t);
+  const id=setInterval(()=>{t--;onTick(t);if(t<=0){clearInterval(id);onEnd();}},1000);
+  onCleanup(()=>clearInterval(id));
+}
+
+/* 1) Нагодуй котика */
+function gameCat(done){
+  const GOAL=30; let n=0, over=false;
+  const cat=el('div',{class:'cat',text:'😿'}), m=el('i'), tm=el('div',{class:'timer'});
+  const press=()=>{
+    if(over) return; n++;
+    m.style.width=Math.min(100,n/GOAL*100)+'%';
+    cat.textContent = n<GOAL/3?'😿':n<GOAL*2/3?'😺':'😻';
+    cat.classList.add('bump'); setTimeout(()=>cat.classList.remove('bump'),80);
+    vibrate(8);
+    if(n>=GOAL) end();
+  };
+  const key=e=>{ if(e.code==='Space'){e.preventDefault(); if(!e.repeat) press();} };
+  document.addEventListener('keydown',key); onCleanup(()=>document.removeEventListener('keydown',key));
+  const btn=el('button',{class:'btn',text:'🐟 ГОДУЙ! 🐟',onclick:press});
+  function end(){
+    if(over) return; over=true;
+    const pts=Math.min(150,Math.round(n/GOAL*150));
+    done(pts, n>=GOAL ? 'Котик наїдений і щасливий! Муррр 😻' : n>=GOAL/2 ? `Котик частково наїдений (${n} рибок). Лишився трохи голодний 😺` : `Котик ображений: лише ${n} рибок 😿`);
+  }
+  playCard('Нагодуй голодного котика!',
+    el('p',{},'Швидко клацай ',el('span',{class:'kbd',text:'ПРОБІЛ'}),' (або тапай по кнопці) — за 7 секунд!'),
+    el('div',{class:'game-box'},cat,el('div',{class:'meter'},m),tm), btn);
+  countdown(7,t=>tm.textContent=`⏱ ${t}`,end);
+}
+gameCat.intro = go => introCard('🐱','Нагодуй котика!','Котик дуже голодний. Клацай ПРОБІЛ (на телефоні — тапай по кнопці) якомога швидше, поки не закінчився час.',go);
+
+/* 2) Лови сердечка */
+function gameHearts(done){
+  let n=0, over=false;
+  const sky=el('div',{class:'sky'}), sc=el('div',{class:'timer',text:'💖 0'}), tm=el('div',{class:'timer'});
+  const spawn=()=>{
+    const bad=Math.random()<.25, ch=bad?pick(['💔','🍅','🦟']):pick(['💖','💗','💕','🩷']);
+    const d=el('button',{class:'drop',text:ch});
+    d.style.left=(Math.random()*80+2)+'%'; d.style.animationDuration=(1.8+Math.random()*1.4)+'s';
+    d.addEventListener('pointerdown',e=>{
+      e.preventDefault(); if(over||d.dataset.x) return; d.dataset.x=1;
+      n += bad?-1:1; if(n<0) n=0; sc.textContent='💖 '+n; d.textContent=bad?'💥':'✨'; vibrate(bad?[30,20,30]:10);
+      setTimeout(()=>d.remove(),200);
+    });
+    sky.append(d); setTimeout(()=>d.remove(),3500);
+  };
+  const id=setInterval(spawn,450); onCleanup(()=>clearInterval(id));
+  function end(){
+    if(over) return; over=true;
+    done(Math.min(150,n*10), n>=15?'Сердечок зібрано цілу купу! Ти — магніт для любові 🧲':n>=8?'Непогано! Ще трохи — і була б королева сердечок 💗':'Сердечка втекли, але ти все одно моя найкраща 😘');
+  }
+  playCard('Лови сердечка!',
+    el('p',{text:'Тапай по 💖. Обережно: 💔 🍅 🦟 віднімають бали!'}),
+    el('div',{class:'game-box'},sc,tm,sky));
+  countdown(10,t=>tm.textContent=`⏱ ${t}`,end);
+}
+gameHearts.intro = go => introCard('💖','Лови сердечка!','З неба падають сердечка. Тапай по них, а от бридоту (💔 🍅 🦟) — оминай. Час: 10 секунд.',go);
+
+/* 3) Ідеальний поцілунок — зупини рухомий маркер у зеленій зоні */
+function gameKiss(done){
+  let hits=0, tries=0; const MAX=3; let over=false;
+  const track=el('div',{class:'track'}), zone=el('div',{class:'zone'}), mk=el('div',{class:'marker',text:'💋'});
+  const info=el('p',{class:'timer',text:`Спроба 1/${MAX}`});
+  track.append(zone,mk);
+  let pos=0, dir=1, speed=1.1; let raf, last=performance.now();
+  const newZone=()=>{ const w=Math.max(12,22-tries*3), l=10+Math.random()*(80-w); zone.style.left=l+'%'; zone.style.width=w+'%'; zone._l=l; zone._w=w; };
+  newZone();
+  const loop=now=>{
+    const dt=now-last; last=now;
+    pos+=dir*speed*dt/16; if(pos>=100){pos=100;dir=-1} if(pos<=0){pos=0;dir=1}
+    mk.style.left=pos+'%'; raf=requestAnimationFrame(loop);
+  };
+  raf=requestAnimationFrame(loop); onCleanup(()=>cancelAnimationFrame(raf));
+  const stop=()=>{
+    if(over) return; tries++;
+    const ok = pos>=zone._l && pos<=zone._l+zone._w;
+    if(ok){hits++; vibrate(30);} else vibrate([40,30,40]);
+    info.textContent = ok?'💥 ЧМОК!':'🙈 Мимо!';
+    if(tries>=MAX){ over=true; cancelAnimationFrame(raf);
+      setTimeout(()=>done(hits*50, hits===3?'Ідеальні три поцілунки з трьох! Профі 😘😘😘':hits?`Влучила ${hits} з ${MAX}. Є над чим тренуватись разом 😏`:'Жодного... доведеться тренуватись в реальному житті 💋'),700);
+    } else setTimeout(()=>{ speed+=.5; newZone(); info.textContent=`Спроба ${tries+1}/${MAX}`; },600);
+  };
+  const key=e=>{ if(e.code==='Space'){e.preventDefault(); if(!e.repeat) stop();} };
+  document.addEventListener('keydown',key); onCleanup(()=>document.removeEventListener('keydown',key));
+  playCard('Ідеальний поцілунок',
+    el('p',{},'Натисни ',el('span',{class:'kbd',text:'ПРОБІЛ'}),' (або кнопку), коли 💋 у зеленій зоні!'),
+    el('div',{class:'game-box'},info,track),
+    el('button',{class:'btn',text:'💋 ЧМОК!',onclick:stop}));
+}
+gameKiss.intro = go => introCard('💋','Ідеальний поцілунок','Маркер бігає туди-сюди. Зупини його точно в зеленій зоні. Три спроби, і з кожною все складніше!',go);
+
+/* 4) Мемо-карточки */
+function gameMemory(done){
+  const faces=shuffle(['🐱','🍕','🌹','💍','🎀','🧸']); const pairs=faces.slice(0,6);
+  const deck=shuffle([...pairs,...pairs]);
+  let open=[], moves=0, found=0, lock=false;
+  const info=el('p',{class:'timer',text:'Ходів: 0'});
+  const grid=el('div',{class:'mem'});
+  deck.forEach(f=>{
+    const c=el('button',{class:'mc',text:'❔'}); c.dataset.f=f;
+    c.addEventListener('click',()=>{
+      if(lock||c.classList.contains('up')||c.classList.contains('done')) return;
+      c.classList.add('up'); c.textContent=f; open.push(c); vibrate(8);
+      if(open.length===2){
+        moves++; info.textContent='Ходів: '+moves; lock=true;
+        const [a,b]=open;
+        if(a.dataset.f===b.dataset.f){
+          a.classList.add('done');b.classList.add('done'); found++; open=[]; lock=false;
+          if(found===pairs.length) setTimeout(()=>{ const pts=Math.max(40,200-(moves-pairs.length)*15);
+            done(pts, moves<=pairs.length+3?'Пам\'ять — просто космос! 🧠✨':'Знайшла всі пари. Дякуємо за терпіння 😅'); },500);
+        } else setTimeout(()=>{ [a,b].forEach(x=>{x.classList.remove('up');x.textContent='❔'}); open=[]; lock=false; },700);
+      }
+    });
+    grid.append(c);
+  });
+  playCard('Знайди пари',
+    el('p',{text:'Перевертай карточки і шукай однакові. Чим менше ходів — тим більше очок!'}),
+    el('div',{class:'game-box'},info,grid));
+}
+gameMemory.intro = go => introCard('🃏','Знайди пари!','12 карточок, 6 пар. Тренуємо пам\'ять — вона знадобиться для питань про нас 😉',go);
+
 
 startScreen();
 </script>
