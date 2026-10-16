@@ -56,8 +56,8 @@
   .btn.ghost:active{box-shadow:0 1px 0 var(--pink-200)}
 
   /* HUD */
-  .hud{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;font-weight:600}
-  .pill{background:#fff;border-radius:99px;padding:6px 14px;box-shadow:0 3px 0 var(--pink-200);font-size:.95rem;white-space:nowrap}
+  .hud{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:14px;font-weight:600}
+  .pill{background:#fff;border-radius:99px;padding:5px 10px;box-shadow:0 3px 0 var(--pink-200);font-size:.82rem;white-space:nowrap}
   .bar{height:14px;background:#fff;border-radius:99px;overflow:hidden;margin-bottom:18px;box-shadow:inset 0 2px 4px #f0509a30}
   .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pink-300),var(--pink-500));border-radius:99px;transition:width .5s cubic-bezier(.2,1.2,.4,1)}
 
@@ -170,6 +170,22 @@
   .wptr{position:absolute;top:-4px;left:50%;transform:translateX(-50%);font-size:2rem;z-index:2;color:var(--pink-700)}
   .ticketbox{position:relative;margin-bottom:6px}
   .scratch{position:absolute;inset:0;border-radius:22px;touch-action:none;transition:opacity .6s;cursor:grab}.scratch.gone{opacity:0}
+
+  .xp{margin-bottom:18px;cursor:pointer}
+  .xtop{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+  .xtop small{opacity:.8;font-size:.78rem;text-align:right}
+  .xtrack{position:relative;height:16px;background:#fff;border-radius:99px;margin:0 14px;box-shadow:inset 0 2px 4px #f0509a30}
+  .xtrack i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg,var(--pink-300),var(--pink-500));transition:width .9s cubic-bezier(.2,1.1,.4,1)}
+  .xm{position:absolute;top:50%;transform:translate(-50%,-50%);font-size:1rem;background:#fff;border:2px solid var(--pink-200);border-radius:50%;width:24px;height:24px;display:grid;place-items:center;filter:grayscale(.6);z-index:1}
+  .xm.on{filter:none;border-color:var(--pink-500);animation:jump .5s}
+  .toast.big{background:linear-gradient(#fff,#ffe3ef);border-color:var(--pink-500);font-size:1.1rem;cursor:pointer}
+  .ov{position:fixed;inset:0;background:#5b234266;z-index:30;display:grid;place-items:center;padding:16px;animation:pop .25s}
+  .modal{background:#fff;border-radius:26px;padding:20px;width:100%;max-width:440px;max-height:88dvh;overflow:auto;border:4px solid var(--pink-300)}
+  .lvls{list-style:none;margin:0 0 14px;padding:0}
+  .lvls li{display:flex;gap:12px;align-items:center;padding:9px 6px;border-bottom:2px dashed var(--pink-200);opacity:.55}
+  .lvls li.on{opacity:1}
+  .lvls .li{font-size:1.8rem;width:42px;text-align:center}
+  .lvls .lt{font-size:.95rem;line-height:1.3}
 </style>
 </head>
 <body>
@@ -307,6 +323,20 @@ const ACH = {
   survivor:["❤️‍🩹","Воскресла","Повернулась у гру після 0 сердець"]
 };
 
+/* 🎁 РІВНІ ПРИЗІВ: шкала від 0 до MAX_SCORE балів. Досягла порога — відкрила приз.
+   at — скільки балів потрібно, reward — приз (заміни на свої!) */
+const MAX_SCORE = 5000;
+const LEVELS = [
+  { at:400,  icon:"🍫", reward:"Шоколадка" },
+  { at:900,  icon:"🤗", reward:"Обійми на 5 хвилин без права відпустити" },
+  { at:1500, icon:"☕", reward:"Кава або чай в улюбленій кав'ярні" },
+  { at:2200, icon:"🎬", reward:"Кіновечір: ти обираєш фільм" },
+  { at:3000, icon:"🌹", reward:"Букет квітів" },
+  { at:3800, icon:"🍕", reward:"Вечеря в ресторані на твій вибір" },
+  { at:4400, icon:"💆", reward:"Масаж на 30 хвилин" },
+  { at:5000, icon:"👑", reward:"Супер-приз: [впиши найкращий подарунок]" }
+];
+
 /* Фінальний бос — runaway-кнопка (не змінювати без потреби) */
 const BOSS = { emoji:"👑", q:"ФІНАЛЬНЕ ПИТАННЯ: чи любиш ти мене?" };
 
@@ -321,7 +351,7 @@ const RANKS = [
 
 /* ===================================================================== */
 const $app = document.getElementById('app');
-const state = { name:"", i:0, score:0, streak:0, bestStreak:0, hints:3, log:[], answered:false, lives:3, ach:new Set(), dodges:0 };
+const state = { name:"", i:0, _s:0, lvl:new Set(), shown:0, get score(){return this._s}, set score(v){ this._s=v; checkLevels(); }, streak:0, bestStreak:0, hints:3, log:[], answered:false, lives:3, ach:new Set(), dodges:0 };
 const POINTS = 100, STREAK_BONUS = 25;
 
 /* helpers */
@@ -337,6 +367,35 @@ const el = (tag, props={}, ...kids) => {
 };
 const shuffle = a => { a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]} return a; };
 const pick = a => a[Math.random()*a.length|0];
+function checkLevels(){
+  LEVELS.forEach((L,i)=>{
+    if(state._s>=L.at && !state.lvl.has(i)){
+      state.lvl.add(i);
+      const n=el('div',{class:'toast big',onclick:()=>n.remove()},el('b',{text:`${L.icon} Рівень ${i+1} відкрито!`}),el('small',{text:`Приз: ${L.reward}`}));
+      document.body.append(n); setTimeout(()=>n.remove(),4200); confetti(50); vibrate([30,20,30,20,60]);
+    }
+  });
+}
+function openRewards(){
+  const ov=el('div',{class:'ov',onclick:e=>{if(e.target===ov)ov.remove();}},
+    el('div',{class:'modal'},
+      el('h2',{text:'🎁 Призи за бали'}),
+      el('ul',{class:'lvls'},LEVELS.map((L,i)=>el('li',{class:state.lvl.has(i)?'on':''},
+        el('span',{class:'li',text:state.lvl.has(i)?L.icon:'🔒'}),
+        el('span',{class:'lt'},el('b',{text:`Рівень ${i+1} • ${L.at} ⭐`}),el('br'),state.lvl.has(i)?L.reward:'Ще закрито'))) ),
+      el('button',{class:'btn',text:'Закрити',onclick:()=>ov.remove()})));
+  document.body.append(ov);
+}
+function xpBar(){
+  const next=LEVELS.find((L,i)=>!state.lvl.has(i));
+  const fill=el('i'); fill.style.width=(Math.min(state.shown,MAX_SCORE)/MAX_SCORE*100)+'%';
+  const track=el('div',{class:'xtrack'},fill,...LEVELS.map((L,i)=>{const m=el('span',{class:'xm'+(state.lvl.has(i)?' on':''),text:state.lvl.has(i)?L.icon:'🎁'}); m.style.left=(L.at/MAX_SCORE*100)+'%'; return m;}));
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{fill.style.width=(Math.min(state._s,MAX_SCORE)/MAX_SCORE*100)+'%'; state.shown=state._s;}));
+  return el('div',{class:'xp',onclick:openRewards,title:'Натисни, щоб побачити призи'},
+    el('div',{class:'xtop'},el('b',{text:`⭐ ${state._s} / ${MAX_SCORE}`}),
+      el('small',{text: next ? `до призу ${next.icon}: ще ${next.at-state._s}` : '🏆 Усі призи відкрито!'})),
+    track);
+}
 function award(id){
   if(state.ach.has(id)) return; state.ach.add(id);
   const [e,t,d]=ACH[id];
@@ -391,22 +450,23 @@ function introScreen(){
     el('p',{text:'Правила прості:'}),
     el('p',{text:'✅ Правильна відповідь = 100 очок'}),
     el('p',{text:'🔥 Серія правильних = бонусні очки'}),
+    el('p',{text:`🎁 Набери бали до ${MAX_SCORE} і відкривай призи (${LEVELS.length} рівнів)`}),
     el('p',{text:'🎮 Між питаннями — міні-ігри з бонусними очками'}),
     el('p',{text:'💡 У тебе 3 підказки (вони прибирають 2 неправильні відповіді)'}),
     el('p',{text:'👑 В кінці чекає фінальний бос…'}),
-    el('button',{class:'btn',text:'Поїхали! 🚀',onclick:()=>{ Object.assign(state,{i:0,score:0,streak:0,bestStreak:0,hints:3,log:[],lives:3,ach:new Set(),dodges:0}); questionScreen(); }})
+    el('button',{class:'btn',text:'Поїхали! 🚀',onclick:()=>{ Object.assign(state,{i:0,lvl:new Set(),shown:0,_s:0,streak:0,bestStreak:0,hints:3,log:[],lives:3,ach:new Set(),dodges:0}); questionScreen(); }})
   ));
 }
 
 function hud(){
   return [
     el('div',{class:'hud'},
-      el('span',{class:'pill',text:`Рівень ${state.i+1}/${total()}`}),
+      el('span',{class:'pill',text:`Питання ${state.i+1}/${total()}`}),
       el('span',{class:'pill',text:'❤️'.repeat(state.lives)+'🖤'.repeat(Math.max(0,3-state.lives))}),
       el('span',{class:'pill',id:'streak',text: state.streak>1 ? `🔥 x${state.streak}` : '🔥 —'}),
-      el('span',{class:'pill',text:`⭐ ${state.score}`})
+      el('span',{class:'pill',text:`🎁 ${state.lvl.size}/${LEVELS.length}`})
     ),
-    (()=>{const b=el('div',{class:'bar'},el('i'));requestAnimationFrame(()=>requestAnimationFrame(()=>b.firstChild.style.width=(state.i/total()*100)+'%'));return b;})()
+    xpBar()
   ];
 }
 
@@ -563,6 +623,7 @@ function resultScreen(){
       return el('div',{},el('h2',{text:`🏅 Ачівки: ${state.ach.size}/${ids.length}`}),
         el('div',{class:'achs'},ids.map(id=>el('div',{class:'ach'+(state.ach.has(id)?' on':''),title:ACH[id][2]},
           el('span',{text:state.ach.has(id)?ACH[id][0]:'🔒'}),el('small',{text:ACH[id][1]})))));})(),
+    el('button',{class:'btn ghost',style:'margin:14px 0 0',text:`🎁 Мої призи за бали: ${state.lvl.size}/${LEVELS.length}`,onclick:openRewards}),
     el('button',{class:'btn',style:'margin-top:18px',text:'🎁 Відкрити подарунок',onclick:ticketScreen}),
     wrong.length ? el('h2',{text:'Над чим працюємо:'}) : '',
     recap,
