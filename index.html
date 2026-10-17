@@ -199,6 +199,23 @@
   .stg{position:absolute;left:50%;top:50%;width:2000px;height:923px;transform-origin:center center;touch-action:none;user-select:none;-webkit-user-select:none}
   .stg canvas{display:block;width:2000px;height:923px}
   .stg-home{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:120px;height:62px;border-radius:31px;border:0;background:#ffffff33;color:#fff;font-size:40px;cursor:pointer}
+
+  .wmap,.lpath{position:relative;width:300px;margin:0 auto}
+  .wsvg{position:absolute;left:0;top:0;pointer-events:none}
+  .wdeco{position:absolute;font-size:1.6rem;opacity:.55;pointer-events:none}
+  .wnode{position:absolute;width:88px;height:88px;border-radius:50%;border:5px solid #fff;box-shadow:0 6px 0 #00000022;font-size:2.4rem;cursor:pointer;display:grid;place-items:center;transition:transform .15s;padding:0}
+  .wnode:active{transform:scale(.94)}.wnode.cur{animation:bob 1.6s ease-in-out infinite;box-shadow:0 0 0 6px #fff9,0 6px 0 #00000022}.wnode.full{box-shadow:0 0 0 5px #ffd23f,0 6px 0 #00000022}
+  .wnode.lock{cursor:not-allowed;opacity:.85}
+  .wchip{position:absolute;width:150px;text-align:center;background:#fff;border-radius:14px;padding:4px 6px;box-shadow:0 3px 0 var(--pink-200);line-height:1.15}
+  .wchip small{display:block;opacity:.7;font-size:.75rem}
+  .wpin{position:absolute;font-size:2rem;animation:bob 1.2s ease-in-out infinite;pointer-events:none}
+  .lnode{position:absolute;width:56px;height:56px;border-radius:50%;border:4px solid #fff;background:var(--lc,#ff9ec7);box-shadow:0 5px 0 #00000022;display:grid;place-items:center;font-size:1.5rem;cursor:pointer;padding:0}
+  .lnode.boss{width:68px;height:68px;font-size:1.9rem;border-color:#ffd23f}
+  .lnode.done{background:#9af0c4}.lnode.lock{background:#d8ccd3;cursor:not-allowed}
+  .lnode.cur{animation:pulse 1.2s ease-in-out infinite}
+  @keyframes pulse{50%{transform:scale(1.14);box-shadow:0 0 0 8px #ffffffaa,0 5px 0 #00000022}}
+  .lnum{position:absolute;top:-8px;left:-8px;width:22px;height:22px;border-radius:50%;background:#fff;color:var(--pink-500);font-size:.75rem;font-weight:700;display:grid;place-items:center;box-shadow:0 2px 0 var(--pink-200)}
+  .lstar{position:absolute;width:60px;text-align:center;font-size:.7rem;pointer-events:none}
 </style>
 </head>
 <body>
@@ -223,37 +240,37 @@ const QUESTIONS = [
      Усі тексти й відповіді в [дужках] — заглушки, заміни на справжні. */
 
   /* 1. Вибір (перший варіант — правильний) */
-  { emoji:"👀", q:"Де ми вперше з'явились в житті одне одного?",
+  { id:"q1", emoji:"👀", q:"Де ми вперше з'явились в житті одне одного?",
     options:["[Справжнє місце знайомства]","У ліфті, де ти мовчав(ла) 12 поверхів","На зустрічі анонімних любителів піци","В очереді за шаурмою"],
     ok:"Це ж початок нашої історії! 🥹", no:"Ну як так, це ж найперший рівень гри! 🙈" },
 
   /* 2. Хто з нас? answer: "me" = я, "you" = вона */
-  { type:"who", emoji:"💬", q:"Хто з нас першим написав повідомлення?",
+  { id:"q2", type:"who", emoji:"💬", q:"Хто з нас першим написав повідомлення?",
     answer:"me",
     ok:"Так, так! Сміливість міста бере 😎", no:"Ай-яй, треба було краще пам'ятати 😅" },
 
   /* 3. Піксельне фото: підстав image:"photos/date.jpg", перший варіант — правильний */
-  { type:"pixel", emoji:"☕", q:"Куди ми пішли на перше побачення? (фото поступово проявляється)",
+  { id:"q3", type:"pixel", emoji:"☕", q:"Куди ми пішли на перше побачення? (фото поступово проявляється)",
     options:["[Справжнє місце побачення]","На парковку, дивитись на машини","У музей старих утюгів","На ринок за картоплею"],
     ok:"Романтика на максималках ✨", no:"Побачення було цілком нормальне, чесно! 😂" },
 
   /* 4. Карта: target — правильна точка у %, radius — похибка; image:"photos/map.jpg" — своя карта */
-  { type:"map", emoji:"💋", q:"Тапни на схемі: де ми вперше поцілувались?",
+  { id:"q4", type:"map", emoji:"💋", q:"Тапни на схемі: де ми вперше поцілувались?",
     target:{x:62,y:42}, radius:12, answerText:"[місце першого поцілунку]",
     ok:"Ти це пам'ятаєш!! Я розтанув 🫠", no:"Серйозно?! Такий момент — і не пам'ятаєш? 😤💕" },
 
   /* 5. Ввести відповідь: accept — всі прийнятні варіанти */
-  { type:"text", emoji:"🍕", q:"Що ми замовили на нашому першому спільному вечері?",
+  { id:"q5", type:"text", emoji:"🍕", q:"Що ми замовили на нашому першому спільному вечері?",
     accept:["[Що саме їли]"], placeholder:"Напиши страву…",
     ok:"Гурман-детектив! 🕵️‍♀️", no:"Мізки на каві, видно 🥲" },
 
   /* 6. Розклади по порядку: items у ПРАВИЛЬНОМУ порядку */
-  { type:"order", emoji:"📅", q:"Розклади події нашої історії по порядку",
+  { id:"q6", type:"order", emoji:"📅", q:"Розклади події нашої історії по порядку",
     items:["👋 Познайомились","☕ Перше побачення","💋 Перший поцілунок","💞 Стали парою","✈️ Перша спільна подорож"],
     ok:"Хронологія — ідеальна! 🕰️", no:"Хтось плутає дати 😅" },
 
   /* 7. Повзунки: answer — правильний %, tolerance — похибка */
-  { type:"slider", emoji:"🍕", q:"Наскільки сильно я люблю…? (влучи в % з похибкою ±10)",
+  { id:"q7", type:"slider", emoji:"🍕", q:"Наскільки сильно я люблю…? (влучи в % з похибкою ±10)",
     tolerance:10,
     items:[
       { emoji:"🍕", label:"Піцу",      answer:90 },
@@ -263,7 +280,7 @@ const QUESTIONS = [
     ok:"Ти знаєш мій смак краще за мене 🍽️", no:"Ну, гастрономічні вподобання — штука тонка 😅" },
 
   /* 8. Правда чи міф (свайп): a:true = правда, false = міф */
-  { type:"swipe", emoji:"🤔", q:"Правда чи міф? Свайпай!",
+  { id:"q8", type:"swipe", emoji:"🤔", q:"Правда чи міф? Свайпай!",
     cards:[
       { t:"Я ніколи не їв суші", a:false },
       { t:"Моя улюблена пора року — літо", a:true },
@@ -274,58 +291,144 @@ const QUESTIONS = [
     ok:"Ти мене читаєш як відкриту книгу 📖", no:"Є ще таємниці, цікаво? 😏" },
 
   /* 9. Ввести відповідь */
-  { type:"text", emoji:"📱", q:"Як я записаний(а) у твоєму телефоні?",
+  { id:"q9", type:"text", emoji:"📱", q:"Як я записаний(а) у твоєму телефоні?",
     accept:["[Як записаний у неї]"], placeholder:"Як записаний…",
     ok:"Ну звісно ти знаєш, це ж ТВІЙ телефон 😄", no:"Ну ти ж знаєш... перевір контакти 📞" },
 
   /* 10. Заповни пропуски: {0},{1} — місця, blanks[i].answer — правильне слово */
-  { type:"fill", emoji:"📝", q:"Заповни пропуски",
+  { id:"q10", type:"fill", emoji:"📝", q:"Заповни пропуски",
     text:"Наша перша зустріч була в {0}, а я тоді був у {1} настрої.",
     blanks:[ {options:["парку","кав'ярні","метро","ліфті"],answer:"кав'ярні"},
              {options:["чудовому","сонному","панічному","голодному"],answer:"голодному"} ],
     ok:"Ти памʼятаєш усе, як слон 🐘", no:"Ну, поправимо спільними спогадами 😄" },
 
   /* 11. Звичайний вибір */
-  { emoji:"🎵", q:"Яка наша пісня?",
+  { id:"q11", emoji:"🎵", q:"Яка наша пісня?",
     options:["[Назва пісні]","Вухо-вухо пісня про лося","Гімн піцерії","Мелодія будильника"],
     ok:"Включаємо і танцюємо 💃🕺", no:"Ну тепер доведеться переслухати разом 🎶" },
 
   /* 12. Хто з нас */
-  { type:"who", emoji:"⏰", q:"Хто з нас частіше запізнюється?",
+  { id:"q12", type:"who", emoji:"⏰", q:"Хто з нас частіше запізнюється?",
     answer:"me",
     ok:"Чесність — наше все 😂", no:"Не ображайся, це правда 🫣" },
 
   /* 13. Звичайний вибір */
-  { emoji:"🙈", q:"Що найбільше мене в тобі… захоплює (і трошки бісить)?",
+  { id:"q13", emoji:"🙈", q:"Що найбільше мене в тобі… захоплює (і трошки бісить)?",
     options:["[Милий недолік]","Те, що ти завжди права","Те, що ти завжди права, навіть коли ні","Нічого, ти ідеальна (брехня, але мила)"],
     ok:"Прямо в ціль 🎯", no:"Ми ще це обговоримо 😏" },
 
   /* 14. Ввести відповідь */
-  { type:"text", emoji:"🐶", q:"Як звати [мого улюбленця / нашого кота]?",
+  { id:"q14", type:"text", emoji:"🐶", q:"Як звати [мого улюбленця / нашого кота]?",
     accept:["[Ім'я]"], placeholder:"Введи ім'я…",
     ok:"Так, це ж член сім'ї! 🐾", no:"Серйозно?! 🙀" },
 
   /* 15. Дата текстом (приймає різні написання) */
-  { type:"text", emoji:"📅", q:"Коли офіційно почались наші стосунки? (дата)",
+  { id:"q15", type:"text", emoji:"📅", q:"Коли офіційно почались наші стосунки? (дата)",
     accept:["[ДД.ММ.РРРР]"], placeholder:"напр. 14.02.2024",
     ok:"Календар в голові — як у президента 📆", no:"Дати — це не твоє, але ми любимо тебе і так ❤️" },
 
   /* 16. Піксельне фото: image:"photos/moment.jpg" */
-  { type:"pixel", emoji:"🏖️", q:"Що на фото? Воно поступово проявляється",
+  { id:"q16", type:"pixel", emoji:"🏖️", q:"Що на фото? Воно поступово проявляється",
     options:["[Правильна відповідь]","Парк","Гори","Ресторан"],
     ok:"Око-алмаз! 💎", no:"Ну, розмите, але ж ми там були 😁" },
 
   /* 17. Розшифруй емодзі */
-  { type:"text", emoji:"🦁👑🎶", q:"Який фільм зашифровано емодзі?",
+  { id:"q17", type:"text", emoji:"🦁👑🎶", q:"Який фільм зашифровано емодзі?",
     accept:["Король Лев","The Lion King"], placeholder:"Назва фільму…",
     ok:"Кіноманка! 🍿", no:"Підказка: Сімба 🦁" },
 
   /* 18. Заповни пропуски — подорож */
-  { type:"fill", emoji:"✈️", q:"Наша мрія про подорож",
+  { id:"q18", type:"fill", emoji:"✈️", q:"Наша мрія про подорож",
     text:"Ми мрієм поїхати до {0} і привезти звідти {1}.",
     blanks:[ {options:["[Країна/місто]","На Місяць","До бабусі","В Антарктиду"],answer:"[Країна/місто]"},
              {options:["[Сувенір]","Валізу пісків","Пінгвіна","Борщ"],answer:"[Сувенір]"} ],
-    ok:"Збираємо чемодани! 🧳", no:"Ну вже й мрійники ми, видно 🌍" }
+    ok:"Збираємо чемодани! 🧳", no:"Ну вже й мрійники ми, видно 🌍" },
+
+  /* ====== Нові питання (заглушки — заміни на свої) ====== */
+  { id:"n1", type:"text", emoji:"💬", q:"Яке слово я написав(ла) тобі в першому повідомленні?",
+    accept:["[слово]"], placeholder:"Перше слово…",
+    ok:"Така пам'ять — на вагу золота 🥇", no:"Ну, це було давно 😅" },
+
+  { id:"n2", emoji:"👁️", q:"Яке було моє перше враження про тебе?",
+    options:["[Справжнє враження]","Що ти з іншої планети","Що ти завжди голодна","Що ти знаєш усі таємниці Всесвіту"],
+    ok:"Ти ж мене читаєш як книгу 📖", no:"Ну я ж не казав це вголос 🙈" },
+
+  { id:"n3", type:"swipe", emoji:"🧐", q:"Правда чи міф про наше знайомство?",
+    cards:[
+      { t:"Ми познайомились узимку", a:true },
+      { t:"Я з першого погляду закохався", a:false },
+      { t:"Ти першою мене помітила", a:true },
+      { t:"Ми обмінялись номерами в перший день", a:false }
+    ],
+    ok:"Детектив у спідниці! 🕵️‍♀️", no:"Памʼять підводить, але ми це виправимо 😄" },
+
+  { id:"n4", emoji:"👗", q:"Що я мав(ла) на собі на нашому першому побаченні?",
+    options:["[Справжній одяг]","Піжаму з єдинорогами","Костюм банана","Нічого (жартую!)"],
+    ok:"Око-алмаз! 💎", no:"Це був дуже стильний образ, повір 😎" },
+
+  { id:"n5", type:"slider", emoji:"😰", q:"Наскільки я нервував(ла) на першому побаченні? (±10)",
+    tolerance:10,
+    items:[ { emoji:"😰", label:"Нервозність", answer:75 }, { emoji:"😍", label:"Захоплення", answer:90 } ],
+    ok:"Ти відчуваєш мене без слів 💞", no:"Я все ж добре тримався(лась) 😅" },
+
+  { id:"n6", type:"who", emoji:"💌", q:"Хто з нас першим сказав «я тебе кохаю»?",
+    answer:"me",
+    ok:"Так, і не пошкодував(ла) жодної секунди ❤️", no:"Серйозно? Це ж найважливіше 🥺" },
+
+  { id:"n7", type:"fill", emoji:"☕", q:"Перше побачення",
+    text:"На першому побаченні ми пили {0} і розмовляли про {1}.",
+    blanks:[ {options:["[Напій]","сік","компот","воду з-під крану"],answer:"[Напій]"},
+             {options:["[Тема]","погоду","квантову фізику","податки"],answer:"[Тема]"} ],
+    ok:"Ти памʼятаєш усе 💖", no:"Ми це ще раз відтворимо 😉" },
+
+  { id:"n8", type:"slider", emoji:"🎚️", q:"Наскільки сильно я люблю…? (±10)",
+    tolerance:10,
+    items:[ { emoji:"☕", label:"Каву", answer:60 }, { emoji:"😴", label:"Спати", answer:95 }, { emoji:"⚽", label:"Футбол", answer:20 } ],
+    ok:"Ти мене добре знаєш 😎", no:"Хм, а я думав, що ти зрозумієш 😄" },
+
+  { id:"n9", type:"map", emoji:"🗺️", q:"Тапни на карті: куди ми їздили в першу подорож?",
+    target:{x:30,y:62}, radius:12, answerText:"[місце першої подорожі]",
+    ok:"Ти це пам'ятаєш! ✈️", no:"Карта — не твоє, але подорож була чудова 😘" },
+
+  { id:"n10", type:"pixel", emoji:"🏔️", q:"Що на фото з нашої подорожі?",
+    options:["[Правильна відповідь]","Гори","Море","Готель"],
+    ok:"Погляд сокола 🦅", no:"Було розмите, ми були трохи інші 😁" },
+
+  { id:"n11", type:"order", emoji:"🧳", q:"Розклади нашу подорож по порядку",
+    items:["🧳 Зібрали валізи","🚆 Вирушили в дорогу","🏨 Заселились","📸 Зробили перше фото","🍽️ Скуштували місцеву їжу"],
+    ok:"Ідеально розкладено ✨", no:"Подорож була хаотична, це нормально 😂" },
+
+  { id:"n12", type:"swipe", emoji:"✈️", q:"Правда чи міф про наші подорожі?",
+    cards:[
+      { t:"Ми ніколи не губили речі в дорозі", a:false },
+      { t:"Ти завжди збираєш валізу останньою", a:true },
+      { t:"Я люблю море більше за гори", a:true },
+      { t:"Ми завжди вчасно приїжджаємо на вокзал", a:false }
+    ],
+    ok:"Подорожнику, ти все знаєш! 🧭", no:"Ми ще багато де потрапимо разом 🌍" },
+
+  { id:"n13", type:"text", emoji:"🌍", q:"Куди ми мрієм поїхати наступним?",
+    accept:["[Місце]"], placeholder:"Куди?",
+    ok:"Квитки вже в корзині 🛒", no:"Ну ж бо, ми це обговорювали 😅" },
+
+  { id:"n14", type:"fill", emoji:"🏡", q:"Наше майбутнє",
+    text:"Через 10 років ми будемо жити в {0} разом із {1}.",
+    blanks:[ {options:["[Місто мрії]","на Місяці","в бабусі в селі","в піцерії"],answer:"[Місто мрії]"},
+             {options:["[Улюбленці]","трьома слонами","коровою","сусідом"],answer:"[Улюбленці]"} ],
+    ok:"Ми вже живемо цією мрією ✨", no:"Нічого, мрії можна змінювати 😄" },
+
+  { id:"n15", type:"who", emoji:"🏠", q:"Хто з нас першим скаже «пішли додому»?",
+    answer:"you",
+    ok:"Так, ліниві ми обоє 😂", no:"Хмм, а я думав, що це я 🤔" },
+
+  { id:"n16", type:"slider", emoji:"💖", q:"Наскільки я тебе люблю? (±10)",
+    tolerance:10,
+    items:[ { emoji:"💖", label:"Тебе", answer:100 }, { emoji:"🤗", label:"Твої обійми", answer:100 } ],
+    ok:"Це ж очевидно! 😍", no:"Це був підступний тест 😏" },
+
+  { id:"n17", emoji:"💍", q:"Що я обіцяю тобі на все життя?",
+    options:["[Справжня обіцянка]","Робити чай у ліжко","Завжди віддавати останній шматок піци","Ніколи не їсти твою їжу без дозволу"],
+    ok:"Це ж мої слова! 🥹", no:"Усе це я теж обіцяю 😄" },
 ];
 
 /* 🎟️ Фінальний сюрприз — запрошення на справжнє побачення (заповни!) */
@@ -379,7 +482,7 @@ const RANKS = [
 
 /* ===================================================================== */
 const $app = document.getElementById('app');
-const state = { name:"", i:0, _s:0, lvl:new Set(), shown:0, get score(){return this._s}, set score(v){ this._s=v; checkLevels(); }, streak:0, bestStreak:0, hints:3, log:[], answered:false, lives:3, ach:new Set(), dodges:0 };
+const state = { name:"", i:0, loc:0, lv:0, done:{}, lastStars:1, _s:0, lvl:new Set(), shown:0, get score(){return this._s}, set score(v){ this._s=v; checkLevels(); }, streak:0, bestStreak:0, hints:3, log:[], answered:false, lives:3, ach:new Set(), dodges:0 };
 const POINTS = 100, STREAK_BONUS = 25;
 
 /* helpers */
@@ -430,7 +533,7 @@ function award(id){
   const n=el('div',{class:'toast'},el('b',{text:`${e} Ачівка: ${t}`}),el('small',{text:d}));
   document.body.append(n); setTimeout(()=>n.remove(),3200);
 }
-const total = () => QUESTIONS.length + 1;
+const total = () => WORLD.reduce((n,L)=>n+L.levels.length,0);
 function render(...nodes){ $app.replaceChildren(...nodes); window.scrollTo({top:0}); }
 const vibrate = ms => { try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){} };
 
@@ -457,17 +560,143 @@ function confetti(n=70){
   }
 }
 
+
+/* =====================================================================
+   🗺️ КАРТА СВІТУ: 5 локацій × 10 рівнів.
+   Рівень = питання ("id" з QUESTIONS), міні-гра ("g:назва") або фінальний бос ("boss").
+   Ігри: cat, chicken, hearts, sushi, kiss, paws, memory, wheel.
+   Рівні відкриваються по черзі, нова локація — після проходження попередньої.
+   ===================================================================== */
+const WORLD = [
+  { name:"Знайомство",       emoji:"👀", color:"#ff9ec7", text:"Де й як усе почалось…",
+    levels:["q1","q2","g:cat","q10","n1","g:hearts","n2","n3","q6","g:memory"] },
+  { name:"Перші побачення",  emoji:"☕", color:"#ffb36b", text:"Метелики в животі й романтика",
+    levels:["q3","q4","g:chicken","q5","n4","g:kiss","n5","n6","n7","g:paws"] },
+  { name:"Смаки та звички",  emoji:"🍕", color:"#ffd166", text:"Що ми любимо (і що нас бісить)",
+    levels:["q7","q8","g:sushi","q9","q11","g:wheel","q12","n8","q13","g:paws"] },
+  { name:"Подорожі та мрії", emoji:"✈️", color:"#7ad0ff", text:"Куди ми вже їздили й куди мрієм",
+    levels:["q18","n9","g:chicken","n10","n11","g:hearts","n12","n13","q17","g:sushi"] },
+  { name:"Наше майбутнє",    emoji:"💞", color:"#c9a0ff", text:"Фінальна локація. Далі — найважливіше",
+    levels:["q14","q16","q15","n14","n15","g:kiss","n16","n17","g:wheel","boss"] }
+];
+const LOC_BONUS = 200;
+const GAME_BY = { cat:()=>gameCat, chicken:()=>gameChicken, hearts:()=>gameHearts, sushi:()=>gameSushi, kiss:()=>gameKiss, paws:()=>gamePaws, memory:()=>gameMemory, wheel:()=>gameWheel };
+
+/* ---- збереження ---- */
+const SAVE_KEY='iloveyou-save-v1';
+function saveGame(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify({name:state.name,score:state._s,lives:state.lives,hints:state.hints,streak:state.streak,bestStreak:state.bestStreak,lvl:[...state.lvl],ach:[...state.ach],done:state.done,log:state.log,dodges:state.dodges})); }catch(e){} }
+function loadGame(){ try{ const d=JSON.parse(localStorage.getItem(SAVE_KEY)); return d&&d.done?d:null; }catch(e){ return null; } }
+function applySave(d){ Object.assign(state,{name:d.name||HER_NAME_FALLBACK,_s:d.score||0,shown:d.score||0,lives:d.lives??3,hints:d.hints??3,streak:d.streak||0,bestStreak:d.bestStreak||0,lvl:new Set(d.lvl||[]),ach:new Set(d.ach||[]),done:d.done||{},log:d.log||[],dodges:d.dodges||0}); }
+function resetState(){ Object.assign(state,{lvl:new Set(),shown:0,_s:0,streak:0,bestStreak:0,hints:3,log:[],lives:3,ach:new Set(),dodges:0,done:{},loc:0,lv:0,lastStars:1}); }
+
+const locProgress = li => WORLD[li].levels.filter((_,k)=>state.done[li+'-'+k]).length;
+const locUnlocked = li => li===0 || locProgress(li-1)===WORLD[li-1].levels.length;
+const lvlUnlocked = (li,k) => locUnlocked(li) && (k===0 || !!state.done[li+'-'+(k-1)]);
+const svgEl = (tag,attrs) => { const n=document.createElementNS('http://www.w3.org/2000/svg',tag); for(const k in attrs) n.setAttribute(k,attrs[k]); return n; };
+const starsText = n => '⭐'.repeat(n)+'☆'.repeat(3-n);
+
+function worldMap(){
+  stopGame();
+  const N=WORLD.length, STEP=150, H=N*STEP+90;
+  const xs=[80,215,90,215,150];
+  const pos=WORLD.map((_,i)=>({x:xs[i%xs.length],y:H-80-i*STEP}));
+  const map=el('div',{class:'wmap'}); map.style.height=H+'px';
+  const svg=svgEl('svg',{class:'wsvg',viewBox:`0 0 300 ${H}`,width:'300',height:H});
+  let d=`M ${pos[0].x} ${pos[0].y}`;
+  for(let i=1;i<N;i++){ const m=(pos[i-1].y+pos[i].y)/2; d+=` C ${pos[i-1].x} ${m}, ${pos[i].x} ${m}, ${pos[i].x} ${pos[i].y}`; }
+  svg.append(svgEl('path',{d,fill:'none',stroke:'#fff',['stroke-width']:'16','stroke-linecap':'round',opacity:'.9'}), svgEl('path',{d,fill:'none',stroke:'#f0509a',['stroke-width']:'5','stroke-dasharray':'2 14','stroke-linecap':'round'}));
+  map.append(svg);
+  ['☁️','🌸','🌳','🦋','⭐','🌷','☁️','🎀'].forEach((e,i)=>{ const s=el('span',{class:'wdeco',text:e}); s.style.left=((i*97)%270+10)+'px'; s.style.top=((i*173)%(H-40)+10)+'px'; map.append(s); });
+  let curIdx=WORLD.findIndex((_,i)=>locUnlocked(i)&&locProgress(i)<WORLD[i].levels.length); if(curIdx<0) curIdx=N-1;
+  WORLD.forEach((L,i)=>{
+    const open=locUnlocked(i), prog=locProgress(i), full=prog===L.levels.length;
+    const nd=el('button',{class:'wnode'+(open?'':' lock')+(full?' full':'')+(i===curIdx?' cur':''),onclick:()=>{ if(open) locationScreen(i); else { nd.classList.remove('shake'); void nd.offsetWidth; nd.classList.add('shake'); vibrate(20); } }},
+      el('span',{class:'wic',text:open?L.emoji:'🔒'}));
+    nd.style.left=(pos[i].x-44)+'px'; nd.style.top=(pos[i].y-44)+'px'; nd.style.background=open?L.color:'#cfc3cc';
+    const chip=el('div',{class:'wchip'},el('b',{text:L.name}),el('small',{text:open?`${prog}/${L.levels.length}${full?' ✅':''}`:'Закрито'}));
+    chip.style.left=(pos[i].x-75)+'px'; chip.style.top=(pos[i].y+50)+'px';
+    map.append(nd,chip);
+    if(i===curIdx){ const pin=el('span',{class:'wpin',text:'🧸'}); pin.style.left=(pos[i].x-14)+'px'; pin.style.top=(pos[i].y-82)+'px'; map.append(pin); }
+  });
+  render(el('div',{class:'card'},
+    el('h2',{text:'🗺️ Карта нашої історії'}),
+    xpBar(),
+    el('p',{class:'center',style:'font-size:.9rem',text:`5 локацій × 10 рівнів. Привіт, ${state.name}! Обери локацію 👇`}),
+    map));
+  requestAnimationFrame(()=>{ const t=map.getBoundingClientRect().top+window.scrollY+pos[curIdx].y-300; window.scrollTo({top:Math.max(0,t)}); });
+}
+
+function locationScreen(li){
+  stopGame(); state.loc=li;
+  const L=WORLD[li], n=L.levels.length, STEP=88, H=n*STEP+50;
+  const xs=[60,150,240,150];
+  const pos=L.levels.map((_,k)=>({x:xs[k%xs.length],y:H-50-k*STEP}));
+  const path=el('div',{class:'lpath'}); path.style.height=H+'px';
+  const svg=svgEl('svg',{class:'wsvg',viewBox:`0 0 300 ${H}`,width:'300',height:H});
+  svg.append(svgEl('polyline',{points:pos.map(p=>`${p.x},${p.y}`).join(' '),fill:'none',stroke:'#fff',['stroke-width']:'14','stroke-linecap':'round','stroke-linejoin':'round'}),
+             svgEl('polyline',{points:pos.map(p=>`${p.x},${p.y}`).join(' '),fill:'none',stroke:L.color,['stroke-width']:'5','stroke-dasharray':'2 12','stroke-linecap':'round','stroke-linejoin':'round'}));
+  path.append(svg);
+  let curK=L.levels.findIndex((_,k)=>!state.done[li+'-'+k]); if(curK<0) curK=n;
+  L.levels.forEach((tok,k)=>{
+    const key=li+'-'+k, done=state.done[key], unlocked=lvlUnlocked(li,k);
+    const boss=tok==='boss'||k===n-1, icon=tok==='boss'?'👑':tok.startsWith('g:')?'🎮':'❓';
+    const nd=el('button',{class:'lnode'+(done?' done':'')+(k===curK?' cur':'')+(!unlocked?' lock':'')+(boss?' boss':''),
+      onclick:()=>{ if(done){ toast(`Рівень ${k+1} уже пройдено ✅ ${starsText(done)}`); } else if(!unlocked){ nd.classList.remove('shake'); void nd.offsetWidth; nd.classList.add('shake'); vibrate(20); } else startLevel(li,k); }},
+      el('span',{class:'lnum',text:k+1}), el('span',{class:'lic',text:!unlocked?'🔒':done?'✅':icon}));
+    nd.style.left=(pos[k].x-(boss?34:28))+'px'; nd.style.top=(pos[k].y-(boss?34:28))+'px'; nd.style.setProperty('--lc',L.color);
+    path.append(nd);
+    if(done){ const st=el('div',{class:'lstar',text:starsText(done)}); st.style.left=(pos[k].x-30)+'px'; st.style.top=(pos[k].y+(boss?36:30))+'px'; path.append(st); }
+  });
+  render(el('div',{class:'card'},
+    el('button',{class:'btn ghost',style:'margin:0 0 14px',text:'🗺️ До карти',onclick:worldMap}),
+    el('span',{class:'big-emoji',text:L.emoji}),
+    el('h2',{style:'margin-bottom:6px',text:L.name}),
+    el('p',{class:'center',style:'font-size:.9rem',text:`${L.text} • ${locProgress(li)}/${n}`}),
+    xpBar(), path));
+  requestAnimationFrame(()=>{ const t=path.getBoundingClientRect().top+window.scrollY+(pos[Math.min(curK,n-1)].y)-320; window.scrollTo({top:Math.max(0,t)}); });
+}
+function toast(m){ const n=el('div',{class:'toast',text:m}); document.body.append(n); setTimeout(()=>n.remove(),2200); }
+
+function startLevel(li,k){
+  state.loc=li; state.lv=k; state.lastStars=1; state.answered=false;
+  const tok=WORLD[li].levels[k];
+  if(tok==='boss') return bossScreen();
+  if(tok.startsWith('g:')) return gameIntro(GAME_BY[tok.slice(2)]());
+  questionScreen(QUESTIONS.find(q=>q.id===tok));
+}
+function levelDone(){
+  stopGame();
+  const li=state.loc,k=state.lv,key=li+'-'+k;
+  state.done[key]=Math.max(state.done[key]||0,state.lastStars||1);
+  saveGame();
+  if(WORLD[li].levels[k]==='boss') return resultScreen();
+  if(locProgress(li)===WORLD[li].levels.length) return locationComplete(li);
+  locationScreen(li);
+}
+function locationComplete(li){
+  const L=WORLD[li], next=WORLD[li+1];
+  state.lives=3; state.score+=LOC_BONUS; confetti(110); vibrate([40,30,40,30,80]); saveGame();
+  render(el('div',{class:'card center'},
+    el('span',{class:'big-emoji',text:'🏁'}),
+    el('h2',{text:`Локацію «${L.name}» пройдено!`}),
+    el('p',{text:`+${LOC_BONUS} ⭐ бонус • сердечка відновлено ❤️❤️❤️`}),
+    next ? el('p',{text:`Відкрито нову локацію: ${next.emoji} ${next.name}`}) : '',
+    el('button',{class:'btn',text:'До карти 🗺️',onclick:worldMap})));
+}
+
 /* ---------- screens ---------- */
 function startScreen(){
+  const save=loadGame();
   const input = el('input',{type:'text',placeholder:"Як тебе звати, сонечко?",maxlength:"24",autocomplete:"off"});
-  const go = () => { state.name = input.value.trim() || HER_NAME_FALLBACK; introScreen(); };
+  const go = () => { state.name = input.value.trim() || HER_NAME_FALLBACK; resetState(); introScreen(); };
   input.addEventListener('keydown',e=>{ if(e.key==='Enter') go(); });
   render(el('div',{class:'card'},
     el('span',{class:'big-emoji',text:'💘'}),
     el('h1',{text:'Наскільки ти знаєш нас?'}),
-    el('p',{class:'center',text:'Гра-опитування для однієї дуже особливої людини. Всього '+total()+' рівнів. Призи — солодкі. Образи — не приймаються 😌'}),
+    el('p',{class:'center',text:'Гра-подорож для однієї дуже особливої людини: 5 локацій, по 10 рівнів у кожній. Призи — солодкі. Образи — не приймаються 😌'}),
+    save ? el('button',{class:'btn',style:'margin-bottom:16px',text:`▶️ Продовжити (${save.name}, ⭐ ${save.score})`,onclick:()=>{ applySave(save); worldMap(); }}) : '',
     input,
-    el('button',{class:'btn',text:'Почати гру 🎮',onclick:go})
+    el('button',{class:save?'btn ghost':'btn',text:save?'Почати нову гру 🎮':'Почати гру 🎮',onclick:go})
   ));
 }
 
@@ -476,20 +705,20 @@ function introScreen(){
     el('span',{class:'big-emoji',text:'🎀'}),
     el('h2',{text:`Привіт, ${state.name}!`}),
     el('p',{text:'Правила прості:'}),
-    el('p',{text:'✅ Правильна відповідь = 100 очок'}),
-    el('p',{text:'🔥 Серія правильних = бонусні очки'}),
-    el('p',{text:`🎁 Набери бали до ${MAX_SCORE} і відкривай призи (${LEVELS.length} рівнів)`}),
-    el('p',{text:'🎮 Між питаннями — міні-ігри з бонусними очками'}),
-    el('p',{text:'💡 У тебе 3 підказки (вони прибирають 2 неправильні відповіді)'}),
-    el('p',{text:'👑 В кінці чекає фінальний бос…'}),
-    el('button',{class:'btn',text:'Поїхали! 🚀',onclick:()=>{ Object.assign(state,{i:0,lvl:new Set(),shown:0,_s:0,streak:0,bestStreak:0,hints:3,log:[],lives:3,ach:new Set(),dodges:0}); questionScreen(); }})
+    el('p',{text:'🗺️ 5 локацій, у кожній 10 рівнів: питання та міні-ігри'}),
+    el('p',{text:'✅ Правильна відповідь = 100 очок, серія дає бонус'}),
+    el('p',{text:`🎁 Набери бали до ${MAX_SCORE} і відкривай призи (${LEVELS.length} рівнів призів)`}),
+    el('p',{text:'💡 У тебе 3 підказки, а ще 3 серця ❤️'}),
+    el('p',{text:'💾 Прогрес зберігається автоматично'}),
+    el('p',{text:'👑 В кінці останньої локації чекає фінальний бос…'}),
+    el('button',{class:'btn',text:'Поїхали! 🚀',onclick:()=>{ saveGame(); worldMap(); }})
   ));
 }
 
 function hud(){
   return [
     el('div',{class:'hud'},
-      el('span',{class:'pill',text:`Питання ${state.i+1}/${total()}`}),
+      el('span',{class:'pill',text:`📍 ${WORLD[state.loc].emoji} ${state.lv+1}/${WORLD[state.loc].levels.length}`}),
       el('span',{class:'pill',text:'❤️'.repeat(state.lives)+'🖤'.repeat(Math.max(0,3-state.lives))}),
       el('span',{class:'pill',id:'streak',text: state.streak>1 ? `🔥 x${state.streak}` : '🔥 —'}),
       el('span',{class:'pill',text:`🎁 ${state.lvl.size}/${LEVELS.length}`})
@@ -523,7 +752,7 @@ function sliderScreen(Q){
       r.res.className = 'sres '+(ok?'ok':'no');
       r.res.textContent = ok ? `✅ Влучила! Правильно ${a}%` : `❌ Ти: ${v}%, правильно: ${a}%`;
     });
-    const isRight = hits === rows.length;
+    const isRight = hits === rows.length; state.lastStars=isRight?3:hits>0?2:1;
     const gain = hits*PER + (isRight ? POINTS-hits*PER+ (state.streak>0?STREAK_BONUS*state.streak:0) : 0);
     state.score += gain;
     if(isRight){ state.streak++; state.bestStreak=Math.max(state.bestStreak,state.streak); confetti(30); vibrate(30); if(state.streak>=5) award('fire'); award('slider'); }
@@ -531,7 +760,7 @@ function sliderScreen(Q){
     state.log.push({q:Q.q,right:isRight,answer:Q.items.map(x=>`${x.label} ${x.answer}%`).join(', ')});
     fb.replaceChildren(
       el('div',{class:'feedback '+(isRight?'ok':'no'),text:`${hits}/${rows.length} влучань, +${gain} очок. `+(isRight?Q.ok:Q.no)}),
-      el('button',{class:'btn',style:'margin-top:14px',text: state.lives<=0 ? '💔 Серця закінчились…' : state.i===QUESTIONS.length-1?'До фінального боса 👑':'Далі ➡️',onclick: state.lives<=0 ? reviveScreen : afterQuestion}));
+      el('button',{class:'btn',style:'margin-top:14px',text: state.lives<=0 ? '💔 Серця закінчились…' : 'Далі ➡️',onclick: state.lives<=0 ? reviveScreen : afterQuestion}));
   });
   render(el('div',{class:'card'}, ...hud(),
     el('span',{class:'big-emoji',text:Q.emoji}),
@@ -540,9 +769,7 @@ function sliderScreen(Q){
     ...rows.map(r=>r.node), check, fb));
 }
 
-function questionScreen(){
-  if(state.i >= QUESTIONS.length) return bossScreen();
-  const Q = QUESTIONS[state.i];
+function questionScreen(Q){
   if(Q.type&&TYPES[Q.type]) return TYPES[Q.type](Q);
   state.answered = false;
   const correct = Q.options[0];
@@ -574,10 +801,10 @@ function questionScreen(){
     } else {
       btn.classList.add('wrong'); state.streak = 0; state.lives--; vibrate([60,40,60]);
     }
-    state.log.push({q:Q.q,right:isRight,answer:correct});
+    state.log.push({q:Q.q,right:isRight,answer:correct}); state.lastStars=isRight?3:1;
     fb.replaceChildren(
       el('div',{class:'feedback '+(isRight?'ok':'no'),text:(isRight?`+${gain} очок! `:'Мимо! ')+(isRight?Q.ok:Q.no)}),
-      el('button',{class:'btn',style:'margin-top:14px',text: state.lives<=0 ? '💔 Серця закінчились…' : state.i===QUESTIONS.length-1?'До фінального боса 👑':'Далі ➡️',onclick: state.lives<=0 ? reviveScreen : afterQuestion})
+      el('button',{class:'btn',style:'margin-top:14px',text: state.lives<=0 ? '💔 Серця закінчились…' : 'Далі ➡️',onclick: state.lives<=0 ? reviveScreen : afterQuestion})
     );
   }
 
@@ -608,7 +835,7 @@ function bossScreen(){
   no.addEventListener('click',flee);
   yes.addEventListener('click',()=>{
     state.score += 500; state.streak++; state.log.push({q:BOSS.q,right:true,answer:'Так 💖'});
-    state.i++; confetti(120); vibrate([40,30,40,30,80]); resultScreen();
+    state.lastStars=3; confetti(120); vibrate([40,30,40,30,80]); levelDone();
   });
   arena.append(yes,no);
   render(el('div',{class:'card'}, ...hud(),
@@ -634,7 +861,7 @@ function ticketScreen(){
 }
 function resultScreen(){
   const correctCount = state.log.filter(l=>l.right).length;
-  const pct = Math.round(correctCount/total()*100);
+  const pct = Math.round(correctCount/Math.max(1,state.log.length)*100);
   const rank = RANKS.find(r=>pct>=r.min);
   const wrong = state.log.filter(l=>!l.right);
   const recap = el('ul',{class:'recap'},
@@ -643,7 +870,7 @@ function resultScreen(){
   render(el('div',{class:'card'},
     el('span',{class:'big-emoji',text:'🏆'}),
     el('div',{class:'score',text:`${state.score}`}),
-    el('p',{class:'center',text:`очок • ${correctCount}/${total()} правильних • найкраща серія 🔥${state.bestStreak}`}),
+    el('p',{class:'center',text:`очок • ${correctCount}/${state.log.length} правильних • найкраща серія 🔥${state.bestStreak}`}),
     el('div',{class:'rank',text:rank.title}),
     el('p',{class:'center',text:`${state.name}, ${rank.text}`}),
     (()=>{ if(!wrong.length) award('perfect'); if(state.hints===3) award('nohints');
@@ -655,7 +882,7 @@ function resultScreen(){
     el('button',{class:'btn',style:'margin-top:18px',text:'🎁 Відкрити подарунок',onclick:ticketScreen}),
     wrong.length ? el('h2',{text:'Над чим працюємо:'}) : '',
     recap,
-    el('button',{class:'btn',style:'margin-top:20px',text:'Зіграти ще раз 🔁',onclick:introScreen}),
+    el('button',{class:'btn',style:'margin-top:20px',text:'Зіграти ще раз 🔁',onclick:()=>{ resetState(); introScreen(); }}),
     el('button',{class:'btn ghost',text:'Показати результат коханому 📸',onclick:()=>confetti(80)})
   ));
 }
@@ -664,16 +891,7 @@ function resultScreen(){
    after — після якого за рахунком питання (1 = після першого) з'являється гра.
    Можна перемикати місцями/змінювати.
    ===================================================================== */
-const GAMES = [
-  { after:3,  run:gameCat },
-  { after:5,  run:gameChicken },
-  { after:7,  run:gameHearts },
-  { after:9,  run:gameSushi },
-  { after:11, run:gameKiss },
-  { after:13, run:gamePaws },
-  { after:15, run:gameMemory },
-  { after:18, run:gameWheel }
-];
+
 
 let cleanups = [];
 const onCleanup = f => cleanups.push(f);
@@ -686,12 +904,7 @@ function reviveScreen(){
     el('p',{text:'Але ми так просто не здаємось. Нагодуй котика (мінімум 12 рибок), і ти повернешся в гру з одним сердечком 🐱'}),
     el('button',{class:'btn',text:'Реанімація! 🚑',onclick:()=>gameIntro(gameCat,true)})));
 }
-function afterQuestion(){ stopGame(); proceed(); }
-function proceed(){
-  const g = GAMES.find(g=>g.after===state.i+1);
-  if(g) return gameIntro(g.run);
-  state.i++; questionScreen();
-}
+function afterQuestion(){ levelDone(); }
 
 /* shell: intro -> play -> result */
 function gameIntro(run, revive){
@@ -701,16 +914,16 @@ function gameIntro(run, revive){
       if(revive){
         if(pts>=60){ state.lives=1; award('survivor'); confetti(60);
           return render(el('div',{class:'card center'},el('span',{class:'big-emoji',text:'❤️‍🩹'}),el('h2',{text:'Ти повернулась! +1 ❤️'}),el('p',{text:msg}),
-            el('button',{class:'btn',text:'Продовжуємо ➡️',onclick:proceed}))); }
+            el('button',{class:'btn',text:'Продовжуємо ➡️',onclick:levelDone}))); }
         return render(el('div',{class:'card center'},el('span',{class:'big-emoji',text:'😿'}),el('h2',{text:'Котик ще голодний…'}),el('p',{text:msg}),
           el('button',{class:'btn',text:'Ще раз! 🔁',onclick:()=>gameIntro(gameCat,true)})));
       }
-      state.score += pts; if(pts>=100) confetti(40); vibrate(40);
+      state.score += pts; state.lastStars=pts>=100?3:pts>=50?2:1; if(pts>=100) confetti(40); vibrate(40);
       render(el('div',{class:'card center'},
         el('span',{class:'big-emoji',text:pts>=100?'🎉':'👍'}),
         el('h2',{text:`Міні-гра пройдена! +${pts} ⭐`}),
         el('p',{text:msg}),
-        el('button',{class:'btn',text:'Далі до питань ➡️',onclick:()=>{ stopGame(); state.i++; questionScreen(); }})));
+        el('button',{class:'btn',text:'Далі ➡️',onclick:levelDone})));
     };
     run(done);
   });
@@ -863,7 +1076,7 @@ function shell(Q, ...kids){
 /* спільне підбиття підсумку: ratio 0..1 */
 function resolve(Q, ratio, fb, o={}){
   state.answered = true;
-  const right = ratio >= .999;
+  const right = ratio >= .999; state.lastStars = right?3:ratio>0?2:1;
   const gain = o.gain ?? (right ? POINTS + (state.streak>0 ? STREAK_BONUS*state.streak : 0) : Math.round(POINTS*ratio*.5));
   state.score += gain;
   if(right){ state.streak++; state.bestStreak=Math.max(state.bestStreak,state.streak); confetti(30); vibrate(30); if(state.streak>=5) award('fire'); }
@@ -871,7 +1084,7 @@ function resolve(Q, ratio, fb, o={}){
   state.log.push({q:Q.q,right,answer:o.answer||''});
   fb.replaceChildren(
     el('div',{class:'feedback '+(right?'ok':'no'),text:`${o.detail?o.detail+' • ':''}+${gain} очок. `+(right?Q.ok:Q.no)}),
-    el('button',{class:'btn',style:'margin-top:14px',text: state.lives<=0 ? '💔 Серця закінчились…' : state.i===QUESTIONS.length-1?'До фінального боса 👑':'Далі ➡️',onclick: state.lives<=0 ? reviveScreen : afterQuestion}));
+    el('button',{class:'btn',style:'margin-top:14px',text: state.lives<=0 ? '💔 Серця закінчились…' : 'Далі ➡️',onclick: state.lives<=0 ? reviveScreen : afterQuestion}));
 }
 const norm = s => String(s).toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
 function lev(a,b){ const d=Array.from({length:a.length+1},(_, i)=>[i]); for(let j=1;j<=b.length;j++) d[0][j]=j;
