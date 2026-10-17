@@ -194,6 +194,11 @@
   .paw.pl{left:10%;bottom:-30px;background:#fff;border:4px solid #2b2233}.paw.pl.grab{transform:translate(95px,-95px)}
   .paw.cp{right:10%;top:-30px;background:#f5a623;border:4px solid #8a5a00}.paw.cp.grab{transform:translate(-95px,95px)}
   .paw.stun{animation:shake .4s 2;filter:grayscale(1)}
+
+  .stage-ov{position:fixed;inset:0;background:#1a0b14;z-index:50;overflow:hidden;touch-action:none}
+  .stg{position:absolute;left:50%;top:50%;width:2000px;height:923px;transform-origin:center center;touch-action:none;user-select:none;-webkit-user-select:none}
+  .stg canvas{display:block;width:2000px;height:923px}
+  .stg-home{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:120px;height:62px;border-radius:31px;border:0;background:#ffffff33;color:#fff;font-size:40px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -1071,138 +1076,246 @@ function tap(target,fn){
 }
 function later(fn,ms){ const t=setTimeout(fn,ms); onCleanup(()=>clearTimeout(t)); return t; }
 
+/* =====================================================================
+   🕹️ ВЕЛИКІ МІНІ-ІГРИ (повноекранні, горизонтальні, у стилі 1-2-Switch):
+   курка, суші-вежа, лапки проти комп'ютера. Малюються на canvas 2000×923.
+   ===================================================================== */
+const SW=2000, SH=923;
+function openStage(onTap,onSkip){
+  const ov=el('div',{class:'stage-ov'}), stg=el('div',{class:'stg'}), cv=el('canvas',{width:SW,height:SH});
+  const home=el('button',{class:'stg-home',text:'⌂','aria-label':'Пропустити'});
+  home.addEventListener('pointerdown',e=>e.stopPropagation());
+  home.addEventListener('click',e=>{e.stopPropagation();onSkip&&onSkip();});
+  stg.append(cv,home); ov.append(stg); document.body.append(ov);
+  const fit=()=>{ const vw=innerWidth,vh=innerHeight,port=vh>vw;
+    const s=port?Math.min(vh/SW,vw/SH):Math.min(vw/SW,vh/SH);
+    stg.style.transform=`translate(-50%,-50%) ${port?'rotate(90deg) ':''}scale(${s})`; };
+  fit(); window.addEventListener('resize',fit);
+  const close=()=>{ window.removeEventListener('resize',fit); ov.remove(); };
+  onCleanup(close); tap(stg,onTap);
+  return {c:cv.getContext('2d'),close};
+}
+const CORN=[
+  {sx:1,sy:1,big:'#f2cb2c',ray:'#ffe56e',btn:'#ffd52e',ink:'#cda62c',hand:'#ead58c'},
+  {sx:-1,sy:1,big:'#1f66e0',ray:'#4c8dff',btn:'#5b9fff',ink:'#2358cc',hand:'#a9c8ff'},
+  {sx:1,sy:-1,big:'#e5210e',ray:'#ff5a40',btn:'#f22b0f',ink:'#b01a0a',hand:'#e89a95'},
+  {sx:-1,sy:-1,big:'#5fd04a',ray:'#8cf06a',btn:'#7dd23a',ink:'#4a9f33',hand:'#cdeab5'}];
+function drawCorners(c,press){
+  CORN.forEach((k,i)=>{ c.save(); c.translate(k.sx>0?0:SW,k.sy>0?0:SH); c.scale(k.sx,k.sy);
+    c.beginPath(); c.ellipse(0,0,235,190,0,0,7); c.fillStyle=k.big; c.fill();
+    c.save(); c.clip(); c.fillStyle=k.ray; for(let a=0;a<90;a+=12){ c.beginPath(); c.moveTo(0,0); c.arc(0,0,270,a*Math.PI/180,(a+6)*Math.PI/180); c.fill(); } c.restore();
+    const sc=(i===2&&press>0)?1-.08*press:1; c.translate(155,127); c.scale(sc,sc);
+    c.beginPath(); c.ellipse(0,0,100,83,0,0,7); c.fillStyle='#fffffff0'; c.fill();
+    c.beginPath(); c.ellipse(0,0,91,74,0,0,7); c.fillStyle=k.btn; c.fill();
+    c.beginPath(); c.arc(0,0,48,0,7); c.fillStyle=k.ink; c.fill();
+    c.fillStyle=k.hand; c.beginPath(); c.ellipse(2,7,21,17,0,0,7); c.fill();
+    c.save(); c.rotate(-.5); rr(c,-8,-30,16,36,8); c.fill(); c.restore(); c.restore(); });
+}
+function stageText(c,t,x,y,size,fill,stroke){ c.font=`700 ${size}px Fredoka,sans-serif`; c.textAlign='center'; c.textBaseline='middle'; c.lineJoin='round';
+  if(stroke){ c.lineWidth=size/6; c.strokeStyle=stroke; c.strokeText(t,x,y); } c.fillStyle=fill; c.fillText(t,x,y); }
+
 /* ---------- 1) 🐔 Курка проти гравітації ---------- */
 function gameChicken(done){
-  const W=360,H=270,BAND=26,SZ=34,CX=70,LEN=3200,OH=104,OW=40;
-  const [cv,c]=mkCanvas(W,H);
-  const obs=[]; for(let x=420;x<LEN-160;x+=190+Math.random()*80) obs.push({x,top:Math.random()<.5});
-  let g=1,y=H-BAND-SZ,vy=0,dist=0,hits=0,inv=0,over=false,t=0;
-  const hearts=el('b',{text:'❤️❤️❤️'}), bar=el('i'), prog=el('div',{class:'meter'},bar);
-  const flip=()=>{ if(!over){ g=-g; vibrate(8);} };
-  const stripes=(x,yy,w,h)=>{ c.save(); c.beginPath(); c.rect(x,yy,w,h); c.clip(); c.fillStyle='#2b2233'; c.fillRect(x,yy,w,h);
-    c.fillStyle='#ffd23f'; for(let i=-h;i<w+h;i+=22){ c.beginPath(); c.moveTo(x+i,yy+h); c.lineTo(x+i+11,yy+h); c.lineTo(x+i+11+h,yy); c.lineTo(x+i+h,yy); c.fill(); } c.restore();
-    c.strokeStyle='#fff'; c.lineWidth=3; c.strokeRect(x,yy,w,h); };
+  const BANDS=[41,205,369,533,697,861], BT=41, CW=76, CH=72, CXS=920, LEN=7400, HW=195;
+  const gaps=[], haz=[]; 
+  for(let j=1;j<=4;j++){ let x=1200+Math.random()*500; while(x<LEN){ gaps.push({j,x,w:210}); x+=800+Math.random()*700; } }
+  const solid=(j,wx)=> j===0||j===5 || !gaps.some(g=>g.j===j&&wx>g.x+6&&wx<g.x+g.w-6);
+  for(let x=1900;x<LEN-700;x+=520+Math.random()*260){ const j=Math.floor(Math.random()*6); if(solid(j,x)&&solid(j,x+HW)) haz.push({j,x}); }
+  let cam=0,y=BANDS[2]-CH,vy=0,g=1,hits=0,inv=0,over=false,t=0,press=0;
+  const flip=()=>{ if(over) return; g=-g; vy=g*260; press=1; vibrate(8); };
+  let ended=false; const fin=(pts,msg)=>{ if(ended) return; ended=true; over=true; stop(); later(()=>{ st.close(); done(pts,msg); },pts?500:0); };
+  const st=openStage(flip,()=>fin(0,'Гру пропущено'));
+  const c=st.c;
+  const tile=(x,yy,w,i)=>{ c.fillStyle=(i%2)?'#2d7cc8':'#3d2153'; c.fillRect(x,yy,w,BT); };
   const stop=raf(dt=>{
-    t+=dt; const speed=150+Math.min(60,dist/60);
-    if(!over){ dist+=speed*dt; vy+=2600*g*dt; y+=vy*dt;
-      if(y<=BAND){y=BAND;vy=0;} if(y>=H-BAND-SZ){y=H-BAND-SZ;vy=0;}
-      inv=Math.max(0,inv-dt);
-      for(const o of obs){ const sx=o.x-dist+CX, oy=o.top?BAND:H-BAND-OH;
-        if(inv<=0 && sx<CX+SZ-8 && sx+OW>CX+8 && oy<y+SZ-6 && oy+OH>y+6){ hits++; inv=1.3; vibrate([50,30,50]); hearts.textContent='❤️'.repeat(Math.max(0,3-hits))+'🖤'.repeat(Math.min(3,hits)); } }
-      bar.style.width=Math.min(100,dist/LEN*100)+'%';
-      if(hits>=3){ finish(false); } else if(dist>=LEN){ finish(true); }
+    t+=dt; press=Math.max(0,press-dt*6);
+    if(!over){
+      cam+=(340+Math.min(120,cam/60))*dt; const wx=cam+CXS; inv=Math.max(0,inv-dt);
+      vy+=4400*g*dt; const py=y, ny=y+vy*dt;
+      let ny2=ny;
+      if(g>0){ for(const yt of BANDS){ const j=BANDS.indexOf(yt); if(py+CH<=yt+2&&ny+CH>=yt&&solid(j,wx)){ ny2=yt-CH; vy=0; break; } } }
+      else { for(const yt of BANDS){ const j=BANDS.indexOf(yt), yb=yt+BT; if(py>=yb-2&&ny<=yb&&solid(j,wx)){ ny2=yb; vy=0; break; } } }
+      y=ny2;
+      if(inv<=0) for(const h of haz){ const hy=BANDS[h.j];
+        if(wx+CW/2-12>h.x && wx-CW/2+12<h.x+HW && y+CH-8>hy-14 && y+8<hy+BT+14){ hits++; inv=1.4; vibrate([50,30,50]); break; } }
+      if(hits>=3) fin(30,'Курка не дотягнула… але ми її все одно любимо 🐥');
+      else if(wx>=LEN) fin(Math.max(40,150-hits*35),hits?`Курка добігла з ${hits} шишками 🐔`:'Курка добігла без жодної подряпини! 🏆');
     }
-    /* draw */
-    const bg=c.createLinearGradient(0,0,0,H); bg.addColorStop(0,'#ff9ec7'); bg.addColorStop(1,'#ffe3ef'); c.fillStyle=bg; c.fillRect(0,0,W,H);
-    c.font='46px serif'; c.textBaseline='top'; c.globalAlpha=.8;
-    for(let i=0;i<4;i++){ const cx=((i*170-dist*.25)%680+680)%680-80; c.fillText('☁️',cx,70+(i%2)*60); } c.globalAlpha=1;
-    for(const b of [0,1]){ const by=b?H-BAND:0; for(let x=-((dist%52));x<W;x+=26){ c.fillStyle=((Math.round((x+dist)/26))%2)?'#3d2150':'#2f7bd1'; c.fillRect(x,by,26,BAND); } }
-    for(const o of obs){ const sx=o.x-dist+CX; if(sx>-OW&&sx<W) stripes(sx,o.top?BAND:H-BAND-OH,OW,OH); }
-    const fx=LEN-dist+CX; if(fx<W){ c.font='34px serif'; c.fillText('🏁',fx,H/2-20); c.fillStyle='#fff'; c.fillRect(fx+14,BAND,4,H-2*BAND); }
-    if(!(inv>0&&Math.floor(t*14)%2)){ c.save(); c.font='34px serif'; c.textBaseline='middle'; c.textAlign='center'; c.translate(CX+SZ/2,y+SZ/2); if(g<0) c.scale(1,-1); c.fillText('🐔',0,2); c.restore(); }
+    /* sky */
+    c.fillStyle='#ff80c1'; c.fillRect(0,0,SW,SH);
+    c.fillStyle='#f5f9ff';
+    const cl=[[300,470,150],[470,430,110],[640,500,160],[1330,480,120],[1520,520,170],[1800,470,110],[1050,560,200]];
+    for(const [cx,cy,r] of cl){ const px=((cx-cam*.22)%2400+2400)%2400-200; c.beginPath(); c.arc(px,cy+r*.4,r,0,7); c.fill(); c.beginPath(); c.arc(px+SW*1.2,cy+r*.4,r,0,7); c.fill(); }
+    c.fillRect(0,570,SW,SH-570);
+    /* bands */
+    BANDS.forEach((by,j)=>{ const x0=-(cam%100);
+      for(let x=x0-100;x<SW;x+=50){ const wxs=x+cam; if(!solid(j,wxs+25)) continue; tile(x,by,50,Math.round(wxs/50)); } });
+    /* hazards */
+    for(const h of haz){ const sx=h.x-cam; if(sx<-300||sx>SW+60) continue; const by=BANDS[h.j];
+      c.save(); c.beginPath(); c.rect(sx,by+2,HW,BT-4); c.clip(); c.fillStyle='#2a2030'; c.fillRect(sx,by,HW,BT);
+      c.fillStyle='#ffd41c'; for(let i=-60;i<HW+60;i+=64){ c.beginPath(); c.moveTo(sx+i,by+BT); c.lineTo(sx+i+30,by+BT); c.lineTo(sx+i+30+BT,by); c.lineTo(sx+i+BT,by); c.fill(); } c.restore();
+      c.strokeStyle='#aac3cc'; c.lineWidth=4; c.strokeRect(sx,by+2,HW,BT-4);
+      c.beginPath(); for(let a=0;a<6;a++){ const ang=a*Math.PI/3; c.lineTo(sx-26+22*Math.cos(ang),by+BT/2+22*Math.sin(ang)); } c.closePath(); c.fillStyle='#c9c9c9'; c.fill(); c.lineWidth=4; c.strokeStyle='#f0c24a'; c.stroke(); }
+    /* finish */
+    const fx=LEN-cam+CXS; if(fx<SW+80){ for(let r=0;r<18;r++){ for(let k=0;k<2;k++){ c.fillStyle=((r+k)%2)?'#222':'#fff'; c.fillRect(fx+k*30,r*52,30,52); } } }
+    /* chicken */
+    if(!(inv>0&&Math.floor(t*14)%2)) drawChicken(c,CXS,y+CH/2,g,press);
+    /* hud */
+    c.fillStyle='#ffffffcc'; rr(c,760,112,480,22,11); c.fill(); c.fillStyle='#ff3c8e'; rr(c,760,112,Math.max(22,480*Math.min(1,(cam+CXS)/LEN)),22,11); c.fill();
+    stageText(c,'❤️'.repeat(3-hits)+'🖤'.repeat(hits),1000,170,52,'#fff','#a82d66');
+    drawCorners(c,press);
   });
-  function finish(win){ if(over) return; over=true; stop();
-    later(()=>done(win?Math.max(40,150-hits*35):30, win?(hits?`Курка добігла з ${hits} шишками 🐔`:'Курка добігла без жодної подряпини! 🏆'):'Курка не дотягнула… але ми її все одно любимо 🐥'),500); }
-  playCard('Курка проти гравітації',
-    el('p',{},'Тапай (або ',el('span',{class:'kbd',text:'ПРОБІЛ'}),') — курка перевертається вгору/вниз, щоб оминути перешкоди!'),
-    el('div',{class:'game-box'},el('div',{class:'hudline'},hearts,el('small',{text:'до фінішу 🏁'})),prog,cv),
-    el('button',{class:'btn',text:'🔄 ПЕРЕВЕРНУТИ',onclick:flip}));
-  tap(cv,flip);
+  function drawChicken(c,x,y,g,pr){
+    c.save(); c.translate(x,y); if(g<0) c.scale(1,-1);
+    c.lineJoin='round';
+    c.fillStyle='#f6a21b'; rr(c,-24,24,14,12,4); c.fill(); rr(c,8,24,14,12,4); c.fill();
+    c.fillStyle='#fff'; c.strokeStyle='#d3dce2'; c.lineWidth=4; rr(c,-36,-30,72,58,16); c.fill(); c.stroke();
+    c.fillStyle='#e8281e'; for(const [px,py,r] of [[-14,-34,13],[2,-38,14],[-26,-26,11]]){ c.beginPath(); c.arc(px,py,r,0,7); c.fill(); }
+    c.save(); c.translate(14,-34); c.rotate(-.55); const cs=['#ff7ac8','#7ad0ff','#ffe066','#9af08a']; cs.forEach((col,i)=>{ c.fillStyle=col; c.fillRect(i*8-2,-6,9,12); }); c.restore();
+    c.fillStyle='#f6a21b'; c.beginPath(); c.moveTo(34,-6); c.lineTo(50,2); c.lineTo(34,10); c.closePath(); c.fill();
+    c.fillStyle='#b6defc'; c.strokeStyle='#8fc3ea'; c.beginPath(); c.ellipse(-22,6,16,12,0,0,7); c.fill(); c.stroke();
+    c.fillStyle='#222'; c.beginPath(); c.arc(16,-8,5,0,7); c.fill(); c.restore();
+  }
 }
-gameChicken.intro=go=>introCard('🐔','Курка проти гравітації','Курка біжить сама. Одна кнопка перевертає її між стелею й підлогою. Оминай смугасті перешкоди й добіжи до фінішу. Є 3 життя!',go);
+gameChicken.intro=go=>introCard('🐔','Курка проти гравітації','Гра на весь екран (краще горизонтально). Курка біжить сама. Тап чи пробіл перевертає її вгору/вниз і дає оминути смугасті перешкоди. Є 3 життя, дістанься фінішу!',go);
 
 /* ---------- 2) 🍣 Вежа з суші ---------- */
 function gameSushi(done){
-  const W=360,H=400,PW=96,PH=28,PLATE=170,TOP=H-30,TARGET=6;
-  const [cv,c]=mkCanvas(W,H);
-  const cols=[['#ff8a65','#fff'],['#ff5c7a','#fff'],['#ffd166','#fff'],['#8bd17c','#fff']];
-  let pieces=[],hold=true,fall=null,t=0,speed=1.5,tries=3,over=false,collapse=null,msg='',msgT=0;
-  const info=el('p',{class:'timer',text:`Висота 0/${TARGET} • спроби ❤️❤️❤️`});
-  const upd=()=>{ info.textContent=`Висота ${pieces.length}/${TARGET} • спроби ${'❤️'.repeat(tries)}${'🖤'.repeat(3-tries)}`; };
+  const CXT=735, BAR_W=325, BAR_Y=573, PW=56, PH=45, TARGET=6, WALL=477;
+  let pieces=[],hold=true,fall=null,t=0,speed=1.5,tries=3,over=false,collapse=null,msg='',msgT=0,press=0,ended=false;
+  const fin=(pts,m)=>{ if(ended) return; ended=true; over=true; stop(); later(()=>{ st.close(); done(pts,m); },pts?600:0); };
+  const release=()=>{ if(!hold||fall||collapse||over) return; fall={x:holdX(),y:holdY(),vy:0,k:pieces.length}; hold=false; press=1; vibrate(10); };
+  const st=openStage(release,()=>fin(0,'Гру пропущено')); const c=st.c;
+  const surface=()=>BAR_Y-pieces.length*PH;
+  const holdX=()=>CXT+215*Math.sin(t*speed);
+  const holdY=()=>surface()-40-PH;
   const say=m=>{ msg=m; msgT=1.1; };
-  const holdX=()=>W/2+(W/2-PW/2-14)*Math.sin(t*speed);
-  const release=()=>{ if(!hold||fall||collapse||over) return; fall={x:holdX(),y:78,vy:0,k:pieces.length}; hold=false; vibrate(10); };
-  function unstableFrom(){ /* індекс першого нестійкого рівня або -1 */
+  function unstableFrom(){
     for(let k=-1;k<pieces.length-1;k++){ const above=pieces.slice(k+1), com=above.reduce((s,p)=>s+p.x,0)/above.length;
-      const sx=k<0?W/2:pieces[k].x, half=k<0?PLATE/2:PW/2; if(Math.abs(com-sx)>half-2) return k; }
+      const sx=k<0?CXT:pieces[k].x, half=k<0?BAR_W/2:PW/2; if(Math.abs(com-sx)>half-2) return k; }
     return -1; }
-  function startCollapse(k){ collapse={t:0,k}; pieces.forEach((p,i)=>{ if(i>k){ p.vx=(p.x-W/2)*.6+(Math.random()*60-30); p.vy=-60; p.r=0; p.vr=(Math.random()-.5)*4; } }); vibrate([80,40,80]); say('Вежа впала! 💥'); }
+  function startCollapse(k){ collapse={t:0,k}; pieces.forEach((p,i)=>{ if(i>k){ p.vx=(p.x-CXT)*1.2+(Math.random()*160-80); p.vy=-160; p.r=0; p.vr=(Math.random()-.5)*5; } }); vibrate([80,40,80]); say('Вежа впала! 💥'); }
   const stop=raf(dt=>{
-    t+=dt; msgT=Math.max(0,msgT-dt);
-    if(fall){ fall.vy+=1500*dt; const py=fall.y; fall.y+=fall.vy*dt; const n=pieces.length, surf=TOP-n*PH;
-      if(py+PH<=surf+4 && fall.y+PH>=surf){
-        const sx=n?pieces[n-1].x:W/2, maxd=(PW+(n?PW:PLATE))/2-10;
-        if(Math.abs(fall.x-sx)<=maxd){ pieces.push({x:fall.x,col:cols[n%cols.length]}); fall=null;
-          const k=unstableFrom(); upd();
+    t+=dt; msgT=Math.max(0,msgT-dt); press=Math.max(0,press-dt*6);
+    if(fall){ fall.vy+=2600*dt; const py=fall.y; fall.y+=fall.vy*dt; const n=pieces.length, surf=surface();
+      if(py+PH<=surf+6 && fall.y+PH>=surf){
+        const sx=n?pieces[n-1].x:CXT, maxd=(PW+(n?PW:BAR_W))/2-8;
+        if(Math.abs(fall.x-sx)<=maxd){ pieces.push({x:fall.x,y:surf-PH,k:fall.k}); fall=null;
+          const k=unstableFrom();
           if(k>=0) startCollapse(k);
-          else if(pieces.length>=TARGET){ over=true; stop(); confetti(40); later(()=>done(Math.max(60,150-(3-tries)*30),`Вежа з ${TARGET} суші стоїть! Японська кухня в захваті 🍣🏆`),900); }
-          else { say('Є! ✅'); later(()=>{hold=true; speed=1.5+pieces.length*.28;},250); }
+          else if(pieces.length>=TARGET){ over=true; confetti(40); vibrate([30,20,30]); fin(Math.max(60,150-(3-tries)*30),`Вежа з ${TARGET} суші стоїть! Японська кухня в захваті 🍣🏆`); }
+          else { say('Є! ✅'); later(()=>{hold=true; speed=1.5+pieces.length*.3;},250); }
         }
       }
-      if(fall&&fall.y>H+40){ fall=null; tries--; upd(); vibrate([40,30,40]); say('Мимо! 🙈');
-        if(tries<=0){ over=true; stop(); later(()=>done(Math.max(10,pieces.length*20),pieces.length?`Висота ${pieces.length}. Суші закінчились 🥲`:'Жодного суші на тарілці 🥲'),700); }
+      if(fall&&fall.y>SH+60){ fall=null; tries--; vibrate([40,30,40]); say('Мимо! 🙈');
+        if(tries<=0) fin(Math.max(10,pieces.length*20),pieces.length?`Висота ${pieces.length}. Суші закінчились 🥲`:'Жодного суші на тарілці 🥲');
         else later(()=>{hold=true;},300); }
     }
-    if(collapse){ collapse.t+=dt; pieces.forEach((p,i)=>{ if(i>collapse.k){ p.vy+=1400*dt; p.x+=p.vx*dt; p.y=(p.y??TOP-(i+1)*PH)+p.vy*dt; p.r+=p.vr*dt; } });
-      if(collapse.t>1.4&&!over){ over=true; stop(); done(Math.max(10,(collapse.k+1)*25),`Вежа впала на висоті ${collapse.k+1}. Тримай суші рівніше! 🍣💥`); } }
-    /* draw */
-    const bg=c.createLinearGradient(0,0,0,H); bg.addColorStop(0,'#d6eef2'); bg.addColorStop(1,'#eaf7f9'); c.fillStyle=bg; c.fillRect(0,0,W,H);
-    c.fillStyle='#fff'; c.globalAlpha=.7; for(let i=0;i<7;i++){ c.beginPath(); c.arc(20+i*55,24+(i%2)*40,14,0,7); c.fill(); } c.globalAlpha=1;
-    c.setLineDash([6,6]); c.strokeStyle='#f0509a'; c.lineWidth=2; c.beginPath(); c.moveTo(0,TOP-TARGET*PH); c.lineTo(W,TOP-TARGET*PH); c.stroke(); c.setLineDash([]);
-    c.fillStyle='#f0509a'; c.font='600 12px Fredoka,sans-serif'; c.fillText('🏁 ЦІЛЬ',6,TOP-TARGET*PH-6);
-    rr(c,W/2-PLATE/2,TOP,PLATE,30,10); c.fillStyle='#a54f4f'; c.fill();
-    pieces.forEach((p,i)=>{ const yy=(collapse&&i>collapse.k)?p.y:TOP-(i+1)*PH; sushi(p.x,yy,p.col,(collapse&&i>collapse.k)?p.r:0); });
-    const hx=holdX();
-    if(hold&&!over){ stick(hx,78); sushi(hx,78,cols[pieces.length%cols.length],0); }
-    if(fall) sushi(fall.x,fall.y,cols[fall.k%cols.length],0);
-    if(msgT>0){ c.font='700 22px Fredoka,sans-serif'; c.textAlign='center'; c.fillStyle='#a82d66'; c.fillText(msg,W/2,170); c.textAlign='start'; }
+    if(collapse){ collapse.t+=dt; pieces.forEach((p,i)=>{ if(i>collapse.k){ p.vy+=2400*dt; p.x+=p.vx*dt; p.y+=p.vy*dt; p.r+=p.vr*dt; } });
+      if(collapse.t>1.5) fin(Math.max(10,(collapse.k+1)*25),`Вежа впала на висоті ${collapse.k+1}. Тримай суші рівніше! 🍣💥`); }
+    draw();
   });
-  function stick(x,y){ c.lineCap='round'; c.lineWidth=6; c.strokeStyle='#a82d66'; c.beginPath(); c.moveTo(x-34,0); c.lineTo(x-PW/2+8,y+PH/2); c.moveTo(x+34,0); c.lineTo(x+PW/2-8,y+PH/2); c.stroke(); }
-  function sushi(x,y,col,rot){ c.save(); c.translate(x,y+PH/2); c.rotate(rot||0); const w=PW,h=PH;
-    rr(c,-w/2,-h/2+6,w,h-6,9); c.fillStyle='#fff'; c.fill(); c.strokeStyle='#e5d5dc'; c.lineWidth=2; c.stroke();
-    rr(c,-w/2-2,-h/2,w+4,h*.55,9); c.fillStyle=col[0]; c.fill(); c.fillStyle='#ffffff55'; c.fillRect(-w/2+10,-h/2+4,w-34,3);
-    c.fillStyle='#2b2b2b'; c.fillRect(-6,-h/2,12,h); c.restore(); }
-  playCard('Вежа з суші',
-    el('p',{},'Паличками рухай суші й тапни (',el('span',{class:'kbd',text:'ПРОБІЛ'}),'), щоб скинути. Ставити треба рівно по центру, інакше вежа впаде!'),
-    el('div',{class:'game-box'},info,cv),
-    el('button',{class:'btn',text:'🍣 ВІДПУСТИТИ',onclick:release}));
-  tap(cv,release);
+  function flower(x,y){ c.save(); c.translate(x,y); c.fillStyle='#fff'; c.strokeStyle='#cfe4ea'; c.lineWidth=2;
+    for(let a=0;a<5;a++){ c.save(); c.rotate(a*Math.PI*2/5); c.beginPath(); c.arc(0,-22,19,0,7); c.fill(); c.restore(); }
+    c.beginPath(); c.arc(0,0,12,0,7); c.fill(); c.beginPath(); for(let a=0;a<10;a++){ c.moveTo(0,0); c.lineTo(34*Math.cos(a*.628),34*Math.sin(a*.628)); } c.stroke(); c.restore(); }
+  function waves(y0,dir){ c.strokeStyle='#ffffffcc'; c.lineWidth=3; for(let row=0;row<3;row++) for(let x=WALL-40+(row%2)*37;x<1560;x+=75){ c.beginPath(); c.arc(x,y0+dir*row*22,38,0,Math.PI*2); c.stroke(); } }
+  function side(left){ c.save(); if(!left){ c.translate(SW,0); c.scale(-1,1); }
+    c.fillStyle='#fdf6e4'; c.fillRect(0,0,WALL,SH); c.fillStyle='#9a4d4a'; c.fillRect(WALL-70,0,70,SH); c.fillStyle='#a86862'; c.fillRect(WALL-62,0,12,SH);
+    c.fillStyle='#a0443f'; for(const x of [250,300,345,395]) c.fillRect(x,40,12,SH-80); c.fillRect(250,40,160,10); c.fillRect(250,SH-50,160,10);
+    for(const yy of [160,200,680,730,230,650]) c.fillRect(0,yy,410,8); c.fillRect(410-12,40,12,SH-80);
+    c.restore(); }
+  function box(x,y,top){ c.fillStyle='#8c3a3a'; rr(c,x,y,280,top?82:81,6); c.fill(); c.fillStyle='#a86a62'; c.fillRect(x+12,top?y:y+12,256,70); }
+  function counter(x,y,flip,n){ c.save(); c.translate(x,y); if(flip) c.rotate(Math.PI); c.fillStyle='#7d2d2d'; rr(c,-78,-40,156,80,12); c.fill(); c.fillStyle='#a8605c'; rr(c,-70,-33,140,66,8); c.fill(); stageText(c,String(n),0,2,56,'#f6dede','#5a1e1e'); c.restore(); }
+  function sushi(x,y,rot,blue){ c.save(); c.translate(x,y+PH/2); c.rotate(rot||0);
+    c.fillStyle='#8cc43a'; rr(c,-PW/2,-PH/2,PW,PH,17); c.fill(); c.strokeStyle='#b9de6a'; c.lineWidth=4; c.stroke();
+    c.fillStyle='#6fa82c'; rr(c,-PW/2+6,-PH/2+3,PW-12,12,6); c.fill();
+    c.fillStyle='#244a12'; c.beginPath(); c.arc(-11,2,3.4,0,7); c.arc(10,2,3.4,0,7); c.fill();
+    c.strokeStyle='#244a12'; c.lineWidth=2.5; c.beginPath(); c.arc(0,8,6,.15*Math.PI,.85*Math.PI); c.stroke(); c.restore(); }
+  function sticks(x,y,dir,col){ /* палички від стіни до суші; dir=1 зліва */
+    c.save(); if(dir<0){ c.translate(SW,0); c.scale(-1,1); x=SW-x; }
+    for(const s of [-1,1]){ c.beginPath(); c.moveTo(WALL,y+s*30-9); c.lineTo(x-PW/2+8,y+s*12-4); c.lineTo(x-PW/2+8,y+s*12+4); c.lineTo(WALL,y+s*30+9); c.closePath(); c.fillStyle=col; c.fill(); c.strokeStyle='#00000033'; c.lineWidth=2; c.stroke(); }
+    c.restore(); }
+  function bar(x,y,col,dash){ c.fillStyle=col; rr(c,x-BAR_W/2,y,BAR_W,18,9); c.fill(); c.fillStyle=dash; for(let i=0;i<9;i++) c.fillRect(x-BAR_W/2+14+i*35,y+4,18,10); }
+  function draw(){
+    c.fillStyle='#c9e3ea'; c.fillRect(0,0,SW,SH);
+    for(const [ys,xs] of [[200,[625,775,925,1075,1225,1375]],[283,[550,700,850,1000,1150,1300,1450]],[640,[550,700,850,1000,1150,1300,1450]],[723,[625,775,925,1075,1225,1375]]]) for(const x of xs) flower(x,ys);
+    waves(30,1); waves(SH-30,-1);
+    side(true); side(false);
+    box(595,0,true); box(1125,0,true); box(595,SH-82,false); box(1125,SH-82,false);
+    counter(125,462,false,pieces.length); counter(1875,462,true,pieces.length);
+    /* опонент-декорація (синя сторона) */
+    const bx=1265+Math.sin(t*1.1)*90; bar(1265,349,'#1357d8','#3a7cf0'); sticks(bx,397,-1,'#0b3fb0'); sushi(bx,397-PH/2,0);
+    /* мій стек */
+    bar(CXT,BAR_Y,'#e6121b','#b00d14');
+    c.setLineDash([10,10]); c.strokeStyle='#e6121b99'; c.lineWidth=3; c.beginPath(); c.moveTo(CXT-170,BAR_Y-TARGET*PH); c.lineTo(CXT+170,BAR_Y-TARGET*PH); c.stroke(); c.setLineDash([]);
+    pieces.forEach(p=>sushi(p.x,p.y,collapse&&p.r?p.r:0));
+    if(hold&&!over){ const hx=holdX(),hy=holdY(); sticks(hx,hy+PH/2,1,'#a1122c'); sushi(hx,hy,0); }
+    if(fall) sushi(fall.x,fall.y,0);
+    stageText(c,'❤️'.repeat(tries)+'🖤'.repeat(3-tries),1000,462,46,'#fff','#a82d66');
+    if(msgT>0) stageText(c,msg,1000,330,64,'#fff','#a82d66');
+    drawCorners(c,press);
+  }
 }
-gameSushi.intro=go=>introCard('🍣','Вежа з суші','Палички носять суші вліво-вправо. Відпускай у потрібний момент і побудуй вежу з 6 штук. Перекошена вежа впаде!',go);
+gameSushi.intro=go=>introCard('🍣','Вежа з суші','Гра на весь екран (краще горизонтально). Палички носять суші вліво-вправо: тап чи пробіл відпускає. Побудуй вежу з 6 штук рівно по центру, інакше вона впаде!',go);
 
 /* ---------- 3) 🐾 Лапки проти комп'ютера ---------- */
 function gamePaws(done){
-  const GOAL=3; let me=0,cp=0,state='wait',kind='fish',stun=0,over=false,compT=null,expT=null;
-  const sc=el('p',{class:'timer'}), msg=el('p',{class:'center',style:'min-height:1.6em;font-weight:600',text:'Чекай…'});
-  const item=el('div',{class:'pitem'}), pl=el('div',{class:'paw pl',text:'🐾'}), cpw=el('div',{class:'paw cp',text:'🐾'});
-  const arena=el('div',{class:'parena'},cpw,item,pl);
-  const upd=()=>{ sc.textContent=`🐱 Ти: ${'🐟'.repeat(me)||'—'}   |   🤖 Комп: ${'🐟'.repeat(cp)||'—'}   (до ${GOAL})`; }; upd();
-  const clr=()=>{ clearTimeout(compT); clearTimeout(expT); };
-  onCleanup(()=>{ over=true; clr(); });
-  const next=()=>{ if(over) return; state='wait'; item.classList.remove('show'); msg.textContent='Чекай…'; later(spawn,900+Math.random()*1400); };
-  function spawn(){ if(over) return; kind=Math.random()<.66?'fish':'bomb'; item.textContent=kind==='fish'?'🐟':'💣'; item.classList.add('show'); state='item';
-    msg.textContent=kind==='fish'?'ХАПАЙ!':'Це бомба?! Не чіпай!';
+  const GOAL=3, FX=1000, FY=462;
+  let me=0,cp=0,state='wait',kind='fish',stun=0,over=false,compT=null,expT=null,itemT=0,showItem=false,pm=0,pc=0,pmT=0,pcT=0,msg='',msgT=0,press=0,t=0,ended=false;
+  const fin=(pts,m)=>{ if(ended) return; ended=true; over=true; stop(); later(()=>{ st.close(); done(pts,m); },pts?700:0); };
+  const press_=()=>{ if(over) return; const now=performance.now(); press=1; if(now<stun) return;
+    if(state==='wait'){ stun=now+800; say('Зарано! Лапа заклякла 🙈'); } else if(state==='item') claim('me'); };
+  const st=openStage(press_,()=>fin(0,'Гру пропущено')); const c=st.c;
+  const say=m=>{ msg=m; msgT=1.1; };
+  onCleanup(()=>{ over=true; clearTimeout(compT); clearTimeout(expT); });
+  const next=()=>{ if(over) return; state='wait'; showItem=false; later(spawn,900+Math.random()*1400); };
+  function spawn(){ if(over) return; kind=Math.random()<.66?'fish':'bomb'; showItem=true; itemT=0; state='item';
     const react=560+Math.random()*380-Math.min(160,(me+cp)*40);
     if(kind==='fish'||Math.random()<.3) compT=setTimeout(()=>claim('cp'),react);
-    expT=setTimeout(()=>{ if(state==='item'){ state='lock'; msg.textContent='Ніхто не взяв'; later(next,700); } },1500); }
-  function claim(who){ if(state!=='item'||over) return; state='lock'; clr();
-    (who==='me'?pl:cpw).classList.add('grab'); setTimeout(()=>{pl.classList.remove('grab');cpw.classList.remove('grab');item.classList.remove('show');},320);
-    if(kind==='fish'){ if(who==='me'){ me++; msg.textContent='+1 🐟 Твоя!'; vibrate(20);} else { cp++; msg.textContent='Комп вхопив рибку 🤖'; } }
-    else { if(who==='me'){ me=Math.max(0,me-1); msg.textContent='💥 Бомба! −1'; vibrate([60,30,60]);} else { cp=Math.max(0,cp-1); msg.textContent='Комп вхопив бомбу 😂 −1'; } }
-    upd();
-    if(me>=GOAL||cp>=GOAL){ over=true; later(()=>done(me>=GOAL?150:40, me>=GOAL?'Ти швидша за комп\'ютер! Три рибки твої 🐟🏆':'Комп\'ютер виявився швидшим… цього разу 🤖'),800); }
+    expT=setTimeout(()=>{ if(state==='item'){ state='lock'; say('Ніхто не взяв'); later(next,700); } },1500); }
+  function claim(who){ if(state!=='item'||over) return; state='lock'; clearTimeout(compT); clearTimeout(expT);
+    if(who==='me') pmT=.35; else pcT=.35;
+    setTimeout(()=>{ showItem=false; },300);
+    if(kind==='fish'){ if(who==='me'){ me++; say('+1 🐟'); vibrate(20);} else { cp++; say('Комп вхопив рибку 🤖'); } }
+    else { if(who==='me'){ me=Math.max(0,me-1); say('💥 Бомба! −1'); vibrate([60,30,60]);} else { cp=Math.max(0,cp-1); say('Комп вхопив бомбу 😂 −1'); } }
+    if(me>=GOAL||cp>=GOAL) fin(me>=GOAL?150:40, me>=GOAL?'Ти швидша за комп\'ютер! Три рибки твої 🐟🏆':'Комп\'ютер виявився швидшим… цього разу 🤖');
     else later(next,900); }
-  const press=()=>{ if(over) return; const now=performance.now(); if(now<stun) return;
-    if(state==='wait'){ stun=now+800; msg.textContent='Зарано! Лапа заклякла 🙈'; pl.classList.add('stun'); setTimeout(()=>pl.classList.remove('stun'),800); }
-    else if(state==='item') claim('me'); };
-  playCard('Лапки проти комп\'ютера',
-    el('p',{text:'Зібери 3 рибки раніше за комп\'ютера. 💣 Бомба забирає бал, тож не чіпай її! Не клацай зарано.'}),
-    el('div',{class:'game-box'},sc,arena,msg),
-    el('button',{class:'btn',text:'🐾 ЛАПА!',onclick:press}));
-  tap(arena,press);
+  function wood(){ c.fillStyle='#b4783a'; c.fillRect(0,0,SW,SH);
+    const W=156; for(let col=-1;col<14;col++){ const x=col*W-10, off=(col%2)?-190:0;
+      for(let y=off-20;y<SH;y+=520){ c.fillStyle='#cb8b47'; rr(c,x+8,y+8,W-14,500,10); c.fill(); c.fillStyle='#c4833f'; c.fillRect(x+W-30,y+30,10,440); } } }
+  function fish(x,y,s){ c.save(); c.translate(x,y); c.scale(s,s); c.fillStyle='#fba93a'; c.strokeStyle='#f58a1c'; c.lineWidth=10; c.lineJoin='round';
+    c.beginPath(); c.moveTo(-130,-62); c.lineTo(-90,-70); c.lineTo(-55,-25); c.bezierCurveTo(-20,-62,60,-65,105,-10); c.bezierCurveTo(140,35,95,80,40,75); c.bezierCurveTo(-10,70,-50,45,-65,25); c.lineTo(-95,70); c.lineTo(-130,35); c.lineTo(-100,-5); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle='#fff'; c.beginPath(); c.arc(85,15,13,0,7); c.fill(); c.fillStyle='#222'; c.beginPath(); c.arc(88,15,6,0,7); c.fill(); c.restore(); }
+  function bomb(x,y,s){ c.save(); c.translate(x,y); c.scale(s,s); c.fillStyle='#2a2a33'; c.beginPath(); c.arc(0,10,86,0,7); c.fill(); c.fillStyle='#ffffff55'; c.beginPath(); c.arc(-30,-18,22,0,7); c.fill();
+    c.strokeStyle='#8a5a2b'; c.lineWidth=12; c.lineCap='round'; c.beginPath(); c.moveTo(30,-62); c.quadraticCurveTo(60,-110,95,-95); c.stroke();
+    c.fillStyle='#ffd23f'; c.beginPath(); for(let a=0;a<8;a++){ const r=a%2?10:24; c.lineTo(100+r*Math.cos(a*Math.PI/4),-98+r*Math.sin(a*Math.PI/4)); } c.closePath(); c.fill(); c.restore(); }
+  function paw(bx,by,tx,ty,fillArm,fillPaw,line,sc){ /* рука від (bx,by) до лапи в (tx,ty) */
+    const ang=Math.atan2(ty-by,tx-bx); c.lineCap='round'; c.lineJoin='round';
+    c.strokeStyle=line; c.lineWidth=140; c.beginPath(); c.moveTo(bx,by); c.lineTo(tx,ty); c.stroke();
+    c.strokeStyle=fillArm; c.lineWidth=118; c.beginPath(); c.moveTo(bx,by); c.lineTo(tx,ty); c.stroke();
+    c.save(); c.translate(tx,ty); c.rotate(ang); c.scale(sc,sc);
+    const shapes=[[0,0,86,100],[78,-62,40,44],[110,-14,40,44],[105,40,40,44],[62,86,38,40]];
+    c.fillStyle=line; for(const [x,y,rx,ry] of shapes){ c.beginPath(); c.ellipse(x,y,rx+12,ry+12,0,0,7); c.fill(); }
+    c.fillStyle=fillPaw; for(const [x,y,rx,ry] of shapes){ c.beginPath(); c.ellipse(x,y,rx,ry,0,0,7); c.fill(); }
+    c.restore(); }
+  function chip(x,y,n,col){ c.fillStyle='#fff'; rr(c,x-76,y-60,152,120,24); c.fill(); c.fillStyle='#111'; rr(c,x-70,y-54,140,108,20); c.fill(); stageText(c,String(n),x,y+3,92,col); }
+  const stop=raf(dt=>{
+    t+=dt; msgT=Math.max(0,msgT-dt); press=Math.max(0,press-dt*6); itemT+=dt; pmT=Math.max(0,pmT-dt); pcT=Math.max(0,pcT-dt);
+    wood();
+    c.fillStyle='#ffffff55'; c.beginPath(); c.moveTo(30,462); c.lineTo(52,438); c.lineTo(52,452); c.lineTo(78,452); c.lineTo(78,472); c.lineTo(52,472); c.lineTo(52,486); c.closePath(); c.fill();
+    if(showItem){ const s=Math.min(1,itemT*7); (kind==='fish'?fish:bomb)(FX,FY,.9*s+.1); }
+    const wob=performance.now()<stun?Math.sin(t*50)*10:0;
+    /* лапа гравця: від низу-ліворуч, лапа тягнеться до предмета при хапанні */
+    const mk=pmT>0?Math.sin((1-pmT/.35)*Math.PI):0, ck=pcT>0?Math.sin((1-pcT/.35)*Math.PI):0;
+    paw(240,1000, 640+(FX-80-640)*mk+wob, 735+(FY+40-735)*mk, '#111','#fff','#111',1);
+    paw(1790,-80, 1340+(FX+60-1340)*ck, 170+(FY-30-170)*ck, '#f0a20a','#f0a20a','#8a5a14',1);
+    chip(405,845,me,'#ff1f5a'); chip(1590,77,cp,'#0a8cff');
+    if(msgT>0) stageText(c,msg,1000,150,60,'#fff','#8a4a14');
+    drawCorners(c,press);
+  });
   next();
 }
-gamePaws.intro=go=>introCard('🐾','Лапки проти комп\'ютера','З\'являється рибка, і хто швидше вхопить, той забирає. Але іноді замість рибки вилітає бомба: торкнешся — мінус бал!',go);
+gamePaws.intro=go=>introCard('🐾','Лапки проти комп\'ютера','Гра на весь екран (краще горизонтально). З\'являється рибка: хто швидше вхопить, той забирає. Але іноді вилітає бомба — торкнешся, мінус бал! Тапай будь-де або пробіл. Не клацай зарано!',go);
 
 
 startScreen();
