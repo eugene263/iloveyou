@@ -1117,10 +1117,13 @@ function stageText(c,t,x,y,size,fill,stroke){ c.font=`700 ${size}px Fredoka,sans
 /* ---------- 1) 🐔 Курка проти гравітації ---------- */
 function gameChicken(done){
   const BANDS=[41,205,369,533,697,861], BT=41, CW=76, CH=72, CXS=920, LEN=7400, HW=195;
-  const gaps=[], haz=[]; 
+  const gaps=[], obs=[], OW=56, OH=44;
   for(let j=1;j<=4;j++){ let x=1200+Math.random()*500; while(x<LEN){ gaps.push({j,x,w:210}); x+=800+Math.random()*700; } }
   const solid=(j,wx)=> j===0||j===5 || !gaps.some(g=>g.j===j&&wx>g.x+6&&wx<g.x+g.w-6);
-  for(let x=1900;x<LEN-700;x+=520+Math.random()*260){ const j=Math.floor(Math.random()*6); if(solid(j,x)&&solid(j,x+HW)) haz.push({j,x}); }
+  /* бочки й ящики: стоять на платформі (top) або висять під нею (bottom) */
+  for(let x=1800;x<LEN-700;x+=480+Math.random()*280){ const j=Math.floor(Math.random()*6);
+    const side=j===0?'bottom':j===5?'top':(Math.random()<.5?'top':'bottom');
+    if(solid(j,x)&&solid(j,x+OW)) obs.push({j,x,side,crate:Math.random()<.5}); }
   let cam=0,y=BANDS[2]-CH,vy=0,g=1,hits=0,inv=0,over=false,t=0,press=0;
   const flip=()=>{ if(over) return; g=-g; vy=g*260; press=1; vibrate(8); };
   let ended=false; const fin=(pts,msg)=>{ if(ended) return; ended=true; over=true; stop(); later(()=>{ st.close(); done(pts,msg); },pts?500:0); };
@@ -1136,8 +1139,8 @@ function gameChicken(done){
       if(g>0){ for(const yt of BANDS){ const j=BANDS.indexOf(yt); if(py+CH<=yt+2&&ny+CH>=yt&&solid(j,wx)){ ny2=yt-CH; vy=0; break; } } }
       else { for(const yt of BANDS){ const j=BANDS.indexOf(yt), yb=yt+BT; if(py>=yb-2&&ny<=yb&&solid(j,wx)){ ny2=yb; vy=0; break; } } }
       y=ny2;
-      if(inv<=0) for(const h of haz){ const hy=BANDS[h.j];
-        if(wx+CW/2-12>h.x && wx-CW/2+12<h.x+HW && y+CH-8>hy-14 && y+8<hy+BT+14){ hits++; inv=1.4; vibrate([50,30,50]); break; } }
+      if(inv<=0) for(const o of obs){ const oy=o.side==='top'?BANDS[o.j]-OH:BANDS[o.j]+BT;
+        if(wx+CW/2-12>o.x && wx-CW/2+12<o.x+OW && y+CH-8>oy && y+8<oy+OH){ hits++; inv=1.4; vibrate([50,30,50]); break; } }
       if(hits>=3) fin(30,'Курка не дотягнула… але ми її все одно любимо 🐥');
       else if(wx>=LEN) fin(Math.max(40,150-hits*35),hits?`Курка добігла з ${hits} шишками 🐔`:'Курка добігла без жодної подряпини! 🏆');
     }
@@ -1150,12 +1153,15 @@ function gameChicken(done){
     /* bands */
     BANDS.forEach((by,j)=>{ const x0=-(cam%100);
       for(let x=x0-100;x<SW;x+=50){ const wxs=x+cam; if(!solid(j,wxs+25)) continue; tile(x,by,50,Math.round(wxs/50)); } });
-    /* hazards */
-    for(const h of haz){ const sx=h.x-cam; if(sx<-300||sx>SW+60) continue; const by=BANDS[h.j];
-      c.save(); c.beginPath(); c.rect(sx,by+2,HW,BT-4); c.clip(); c.fillStyle='#2a2030'; c.fillRect(sx,by,HW,BT);
-      c.fillStyle='#ffd41c'; for(let i=-60;i<HW+60;i+=64){ c.beginPath(); c.moveTo(sx+i,by+BT); c.lineTo(sx+i+30,by+BT); c.lineTo(sx+i+30+BT,by); c.lineTo(sx+i+BT,by); c.fill(); } c.restore();
-      c.strokeStyle='#aac3cc'; c.lineWidth=4; c.strokeRect(sx,by+2,HW,BT-4);
-      c.beginPath(); for(let a=0;a<6;a++){ const ang=a*Math.PI/3; c.lineTo(sx-26+22*Math.cos(ang),by+BT/2+22*Math.sin(ang)); } c.closePath(); c.fillStyle='#c9c9c9'; c.fill(); c.lineWidth=4; c.strokeStyle='#f0c24a'; c.stroke(); }
+    /* бочки та ящики */
+    for(const o of obs){ const sx=o.x-cam; if(sx<-100||sx>SW+60) continue; const oy=o.side==='top'?BANDS[o.j]-OH:BANDS[o.j]+BT;
+      c.save(); c.lineJoin='round';
+      if(o.crate){ c.fillStyle='#e0a860'; c.strokeStyle='#8a5a2b'; c.lineWidth=5; rr(c,sx+2,oy+2,OW-4,OH-4,5); c.fill(); c.stroke();
+        c.beginPath(); c.moveTo(sx+8,oy+8); c.lineTo(sx+OW-8,oy+OH-8); c.moveTo(sx+OW-8,oy+8); c.lineTo(sx+8,oy+OH-8); c.stroke(); }
+      else { c.fillStyle='#b06a2c'; c.strokeStyle='#6e3d14'; c.lineWidth=5; c.beginPath(); c.ellipse(sx+OW/2,oy+OH/2,OW/2-1,OH/2-1,0,0,7); c.fill(); c.stroke();
+        c.strokeStyle='#5a5a66'; c.lineWidth=5; for(const dx of [-15,15]){ c.beginPath(); c.moveTo(sx+OW/2+dx,oy+4); c.lineTo(sx+OW/2+dx,oy+OH-4); c.stroke(); }
+        c.fillStyle='#ffffff40'; c.beginPath(); c.ellipse(sx+OW/2-8,oy+13,10,5,0,0,7); c.fill(); }
+      c.restore(); }
     /* finish */
     const fx=LEN-cam+CXS; if(fx<SW+80){ for(let r=0;r<18;r++){ for(let k=0;k<2;k++){ c.fillStyle=((r+k)%2)?'#222':'#fff'; c.fillRect(fx+k*30,r*52,30,52); } } }
     /* chicken */
@@ -1177,12 +1183,12 @@ function gameChicken(done){
     c.fillStyle='#222'; c.beginPath(); c.arc(16,-8,5,0,7); c.fill(); c.restore();
   }
 }
-gameChicken.intro=go=>introCard('🐔','Курка проти гравітації','Гра на весь екран (краще горизонтально). Курка біжить сама. Тап чи пробіл перевертає її вгору/вниз і дає оминути смугасті перешкоди. Є 3 життя, дістанься фінішу!',go);
+gameChicken.intro=go=>introCard('🐔','Курка проти гравітації','Гра на весь екран (краще горизонтально). Курка біжить сама. Тап чи пробіл перевертає її вгору/вниз і дає оминути бочки та ящики. Є 3 життя, дістанься фінішу!',go);
 
 /* ---------- 2) 🍣 Вежа з суші ---------- */
 function gameSushi(done){
   const CXT=735, BAR_W=325, BAR_Y=573, PW=56, PH=45, TARGET=6, WALL=477;
-  let pieces=[],hold=true,fall=null,t=0,speed=1.5,tries=3,over=false,collapse=null,msg='',msgT=0,press=0,ended=false;
+  let pieces=[],hold=true,fall=null,t=0,speed=1.5,over=false,collapse=null,msg='',msgT=0,press=0,ended=false,timeLeft=80,falls=0,misses=0,best=0;
   const fin=(pts,m)=>{ if(ended) return; ended=true; over=true; stop(); later(()=>{ st.close(); done(pts,m); },pts?600:0); };
   const release=()=>{ if(!hold||fall||collapse||over) return; fall={x:holdX(),y:holdY(),vy:0,k:pieces.length}; hold=false; press=1; vibrate(10); };
   const st=openStage(release,()=>fin(0,'Гру пропущено')); const c=st.c;
@@ -1202,17 +1208,16 @@ function gameSushi(done){
         const sx=n?pieces[n-1].x:CXT, maxd=(PW+(n?PW:BAR_W))/2-8;
         if(Math.abs(fall.x-sx)<=maxd){ pieces.push({x:fall.x,y:surf-PH,k:fall.k}); fall=null;
           const k=unstableFrom();
-          if(k>=0) startCollapse(k);
-          else if(pieces.length>=TARGET){ over=true; confetti(40); vibrate([30,20,30]); fin(Math.max(60,150-(3-tries)*30),`Вежа з ${TARGET} суші стоїть! Японська кухня в захваті 🍣🏆`); }
+          if(k>=0) { best=Math.max(best,pieces.length-1); startCollapse(k); }
+          else if(pieces.length>=TARGET){ over=true; confetti(40); vibrate([30,20,30]); fin(Math.max(50,150-falls*20-misses*5),falls?`Вежа добудована до лінії (після ${falls} падінь). Упертість — наше все 🍣🏆`:`Вежа дотягнула до лінії з першої спроби! 🍣🏆`); }
           else { say('Є! ✅'); later(()=>{hold=true; speed=1.5+pieces.length*.3;},250); }
         }
       }
-      if(fall&&fall.y>SH+60){ fall=null; tries--; vibrate([40,30,40]); say('Мимо! 🙈');
-        if(tries<=0) fin(Math.max(10,pieces.length*20),pieces.length?`Висота ${pieces.length}. Суші закінчились 🥲`:'Жодного суші на тарілці 🥲');
-        else later(()=>{hold=true;},300); }
+      if(fall&&fall.y>SH+60){ fall=null; misses++; vibrate([40,30,40]); say('Мимо! 🙈'); later(()=>{hold=true;},300); }
     }
     if(collapse){ collapse.t+=dt; pieces.forEach((p,i)=>{ if(i>collapse.k){ p.vy+=2400*dt; p.x+=p.vx*dt; p.y+=p.vy*dt; p.r+=p.vr*dt; } });
-      if(collapse.t>1.5) fin(Math.max(10,(collapse.k+1)*25),`Вежа впала на висоті ${collapse.k+1}. Тримай суші рівніше! 🍣💥`); }
+      if(collapse.t>1.4){ collapse=null; pieces=[]; falls++; speed=1.5; say('Будуємо знову! 💪'); later(()=>{hold=true;},300); } }
+    if(!over){ timeLeft-=dt; if(timeLeft<=0){ best=Math.max(best,pieces.length); fin(Math.max(10,best*20),best?`Час вийшов на висоті ${best} з ${TARGET}. Майже! 🍣⏱️`:'Час вийшов, а вежі нема 🥲'); } }
     draw();
   });
   function flower(x,y){ c.save(); c.translate(x,y); c.fillStyle='#fff'; c.strokeStyle='#cfe4ea'; c.lineWidth=2;
@@ -1247,20 +1252,21 @@ function gameSushi(done){
     const bx=1265+Math.sin(t*1.1)*90; bar(1265,349,'#1357d8','#3a7cf0'); sticks(bx,397,-1,'#0b3fb0'); sushi(bx,397-PH/2,0);
     /* мій стек */
     bar(CXT,BAR_Y,'#e6121b','#b00d14');
-    c.setLineDash([10,10]); c.strokeStyle='#e6121b99'; c.lineWidth=3; c.beginPath(); c.moveTo(CXT-170,BAR_Y-TARGET*PH); c.lineTo(CXT+170,BAR_Y-TARGET*PH); c.stroke(); c.setLineDash([]);
+    const ly=BAR_Y-TARGET*PH; c.strokeStyle='#ff2d55'; c.lineWidth=8; c.setLineDash([26,14]); c.beginPath(); c.moveTo(WALL+12,ly); c.lineTo(WALL+520,ly); c.stroke(); c.setLineDash([]);
+    stageText(c,'🏁 ЦІЛЬ',WALL+110,ly-26,34,'#fff','#d01040');
     pieces.forEach(p=>sushi(p.x,p.y,collapse&&p.r?p.r:0));
     if(hold&&!over){ const hx=holdX(),hy=holdY(); sticks(hx,hy+PH/2,1,'#a1122c'); sushi(hx,hy,0); }
     if(fall) sushi(fall.x,fall.y,0);
-    stageText(c,'❤️'.repeat(tries)+'🖤'.repeat(3-tries),1000,462,46,'#fff','#a82d66');
+    stageText(c,'⏱ '+Math.max(0,Math.ceil(timeLeft)),1000,60,54,'#fff','#a82d66');
     if(msgT>0) stageText(c,msg,1000,330,64,'#fff','#a82d66');
     drawCorners(c,press);
   }
 }
-gameSushi.intro=go=>introCard('🍣','Вежа з суші','Гра на весь екран (краще горизонтально). Палички носять суші вліво-вправо: тап чи пробіл відпускає. Побудуй вежу з 6 штук рівно по центру, інакше вона впаде!',go);
+gameSushi.intro=go=>introCard('🍣','Вежа з суші','Гра на весь екран (краще горизонтально). Палички носять суші вліво-вправо: тап чи пробіл відпускає. Дотягни вежу до червоної лінії (6 суші). Ставити треба рівно по центру. Якщо вежа впала, нічого страшного: будуєш заново, поки не вийде час (80 с)!',go);
 
 /* ---------- 3) 🐾 Лапки проти комп'ютера ---------- */
 function gamePaws(done){
-  const GOAL=3, FX=1000, FY=462;
+  const GOAL=3, FX=1000, FY=462, PM=.14, PC=.38;
   let me=0,cp=0,state='wait',kind='fish',stun=0,over=false,compT=null,expT=null,itemT=0,showItem=false,pm=0,pc=0,pmT=0,pcT=0,msg='',msgT=0,press=0,t=0,ended=false;
   const fin=(pts,m)=>{ if(ended) return; ended=true; over=true; stop(); later(()=>{ st.close(); done(pts,m); },pts?700:0); };
   const press_=()=>{ if(over) return; const now=performance.now(); press=1; if(now<stun) return;
@@ -1274,8 +1280,8 @@ function gamePaws(done){
     if(kind==='fish'||Math.random()<.3) compT=setTimeout(()=>claim('cp'),react);
     expT=setTimeout(()=>{ if(state==='item'){ state='lock'; say('Ніхто не взяв'); later(next,700); } },1500); }
   function claim(who){ if(state!=='item'||over) return; state='lock'; clearTimeout(compT); clearTimeout(expT);
-    if(who==='me') pmT=.35; else pcT=.35;
-    setTimeout(()=>{ showItem=false; },300);
+    if(who==='me') pmT=PM; else pcT=PC;
+    setTimeout(()=>{ showItem=false; },who==='me'?90:300);
     if(kind==='fish'){ if(who==='me'){ me++; say('+1 🐟'); vibrate(20);} else { cp++; say('Комп вхопив рибку 🤖'); } }
     else { if(who==='me'){ me=Math.max(0,me-1); say('💥 Бомба! −1'); vibrate([60,30,60]);} else { cp=Math.max(0,cp-1); say('Комп вхопив бомбу 😂 −1'); } }
     if(me>=GOAL||cp>=GOAL) fin(me>=GOAL?150:40, me>=GOAL?'Ти швидша за комп\'ютер! Три рибки твої 🐟🏆':'Комп\'ютер виявився швидшим… цього разу 🤖');
@@ -1306,7 +1312,7 @@ function gamePaws(done){
     if(showItem){ const s=Math.min(1,itemT*7); (kind==='fish'?fish:bomb)(FX,FY,.9*s+.1); }
     const wob=performance.now()<stun?Math.sin(t*50)*10:0;
     /* лапа гравця: від низу-ліворуч, лапа тягнеться до предмета при хапанні */
-    const mk=pmT>0?Math.sin((1-pmT/.35)*Math.PI):0, ck=pcT>0?Math.sin((1-pcT/.35)*Math.PI):0;
+    const mk=pmT>0?Math.sin((1-pmT/PM)*Math.PI):0, ck=pcT>0?Math.sin((1-pcT/PC)*Math.PI):0;
     paw(240,1000, 640+(FX-80-640)*mk+wob, 735+(FY+40-735)*mk, '#111','#fff','#111',1);
     paw(1790,-80, 1340+(FX+60-1340)*ck, 170+(FY-30-170)*ck, '#f0a20a','#f0a20a','#8a5a14',1);
     chip(405,845,me,'#ff1f5a'); chip(1590,77,cp,'#0a8cff');
