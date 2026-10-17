@@ -752,15 +752,6 @@ function toast(m){ const n=el('div',{class:'toast',text:m}); document.body.appen
 function enterLocation(li){
   const L=WORLD[li], n=L.levels.length, prog=locProgress(li);
   if(prog>=n){ toast(`Локацію «${L.name}» вже пройдено ✅`); return; }
-  if(prog===0){
-    stopGame(); state.loc=li; state.lv=0;
-    return render(el('div',{class:'card center'},
-      el('span',{class:'big-emoji',text:L.emoji}),
-      el('p',{class:'pill',style:'display:inline-block;margin-bottom:10px',text:`Локація ${li+1} з ${WORLD.length}`}),
-      el('h2',{text:L.name}), el('p',{text:L.text}), el('p',{text:`${n} рівнів поспіль: питання й міні-ігри 🎮`}),
-      el('button',{class:'btn',text:'Поїхали! 🚀',onclick:()=>startLevel(li,0)}),
-      el('button',{class:'btn ghost',text:'🗺️ До карти',onclick:worldMap})));
-  }
   const k=L.levels.findIndex((_,j)=>!state.done[li+'-'+j]);
   startLevel(li,k<0?0:k);
 }
