@@ -118,7 +118,7 @@
   .mc.done{background:#d9fbe9;border-color:var(--ok);box-shadow:none}
   .kbd{display:inline-block;background:var(--pink-100);border-radius:8px;padding:2px 10px;font-weight:600;box-shadow:0 3px 0 var(--pink-200)}
 
-  .toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:20;background:#fff;border:3px solid var(--pink-400);border-radius:18px;padding:10px 18px;box-shadow:0 6px 0 var(--pink-300);text-align:center;animation:toast 3.2s forwards;max-width:90vw}
+  .toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:100;background:#fff;border:3px solid var(--pink-400);border-radius:18px;padding:10px 18px;box-shadow:0 6px 0 var(--pink-300);text-align:center;animation:toast 3.2s forwards;max-width:90vw}
   .toast small{display:block;font-size:.8rem;opacity:.8}
   @keyframes toast{0%{transform:translate(-50%,-90px)}10%,85%{transform:translate(-50%,0)}100%{transform:translate(-50%,-120px)}}
   .qphoto{display:block;width:100%;max-height:260px;object-fit:cover;border-radius:20px;border:4px solid #fff;box-shadow:0 6px 0 var(--pink-200);margin:0 auto 14px}
@@ -179,7 +179,7 @@
   .xm{position:absolute;top:50%;transform:translate(-50%,-50%);font-size:1rem;background:#fff;border:2px solid var(--pink-200);border-radius:50%;width:24px;height:24px;display:grid;place-items:center;filter:grayscale(.6);z-index:1}
   .xm.on{filter:none;border-color:var(--pink-500);animation:jump .5s}
   .toast.big{background:linear-gradient(#fff,#ffe3ef);border-color:var(--pink-500);font-size:1.1rem;cursor:pointer}
-  .ov{position:fixed;inset:0;background:#5b234266;z-index:30;display:grid;place-items:center;padding:16px;animation:pop .25s}
+  .ov{position:fixed;inset:0;background:#5b234266;z-index:90;display:grid;place-items:center;padding:16px;animation:pop .25s}
   .modal{background:#fff;border-radius:26px;padding:20px;width:100%;max-width:440px;max-height:88dvh;overflow:auto;border:4px solid var(--pink-300)}
   .lvls{list-style:none;margin:0 0 14px;padding:0}
   .lvls li{display:flex;gap:12px;align-items:center;padding:9px 6px;border-bottom:2px dashed var(--pink-200);opacity:.55}
@@ -216,6 +216,27 @@
   @keyframes pulse{50%{transform:scale(1.14);box-shadow:0 0 0 8px #ffffffaa,0 5px 0 #00000022}}
   .lnum{position:absolute;top:-8px;left:-8px;width:22px;height:22px;border-radius:50%;background:#fff;color:var(--pink-500);font-size:.75rem;font-weight:700;display:grid;place-items:center;box-shadow:0 2px 0 var(--pink-200)}
   .lstar{position:absolute;width:60px;text-align:center;font-size:.7rem;pointer-events:none}
+
+  .mnode{position:absolute;transform:translate(-50%,-50%);width:136px;height:136px;border-radius:50%;border:9px solid #fff;box-shadow:0 10px 0 #00000026;font-size:70px;display:grid;place-items:center;cursor:pointer;padding:0;line-height:1}
+  .mnode.cur{animation:mpulse 1.4s ease-in-out infinite}.mnode.full{box-shadow:0 0 0 8px #ffd23f,0 10px 0 #00000026}.mnode.lock{cursor:not-allowed}
+  @keyframes mpulse{50%{transform:translate(-50%,-50%) scale(1.12)}}
+  @keyframes sshake{20%,60%{transform:translate(calc(-50% - 10px),-50%)}40%,80%{transform:translate(calc(-50% + 10px),-50%)}}
+  .mnode.shake,.snode.shake{animation:sshake .45s}
+  .mlabel{position:absolute;transform:translateX(-50%);min-width:260px;background:#fff;border:6px solid #a54f6a;border-radius:26px;text-align:center;padding:6px 22px;box-shadow:0 8px 0 #a54f6a55;line-height:1.15;pointer-events:none}
+  .mlabel b{display:block;font-size:36px}.mlabel small{display:block;font-size:26px;opacity:.7}
+  .mpin{position:absolute;font-size:68px;animation:bob 1.2s ease-in-out infinite;pointer-events:none}
+  .snode{position:absolute;transform:translate(-50%,-50%);width:104px;height:104px;border-radius:50%;border:8px solid #fff;background:var(--lc,#ff9ec7);box-shadow:0 8px 0 #00000026;display:grid;place-items:center;font-size:54px;cursor:pointer;padding:0;line-height:1}
+  .snode.boss{width:134px;height:134px;font-size:68px;border-color:#ffd23f}
+  .snode.done{background:#9af0c4}.snode.lock{background:#d8ccd3;cursor:not-allowed}.snode.cur{animation:mpulse 1.2s ease-in-out infinite}
+  .snum{position:absolute;top:-14px;left:-14px;width:44px;height:44px;border-radius:50%;background:#fff;color:#f0509a;font-size:26px;font-weight:700;display:grid;place-items:center;box-shadow:0 3px 0 #ffc2d9}
+  .sstar{position:absolute;transform:translateX(-50%);font-size:28px;pointer-events:none;text-shadow:0 2px 0 #fff}
+  .shud{position:absolute;left:50%;bottom:36px;transform:translateX(-50%);background:#fff;border:6px solid #a54f6a;border-radius:44px;padding:10px 36px;font-size:34px;display:flex;gap:26px;align-items:center;cursor:pointer;white-space:nowrap;box-shadow:0 8px 0 #a54f6a55}
+  .shud small{font-size:26px;opacity:.75}
+  .shud.tr{left:auto;right:50px;top:50px;bottom:auto;transform:none;padding:8px 24px;gap:18px;font-size:30px}
+  .shud.tr .sbar,.shud.tr small{display:none}
+  .sbar{width:300px;height:22px;background:#ffdeeb;border-radius:11px;overflow:hidden}.sbar i{display:block;height:100%;background:linear-gradient(90deg,#ff9ec7,#f0509a)}
+  .sback{position:absolute;left:50px;top:50px;background:#fff;border:6px solid #a54f6a;border-radius:36px;font:600 34px Fredoka,sans-serif;color:#a82d66;padding:8px 28px;cursor:pointer;box-shadow:0 6px 0 #a54f6a55}
+  .sprog{position:absolute;right:56px;top:58px;background:#fff;border:6px solid #a54f6a;border-radius:36px;font-size:32px;padding:8px 28px;box-shadow:0 6px 0 #a54f6a55}
 </style>
 </head>
 <body>
@@ -595,70 +616,174 @@ const lvlUnlocked = (li,k) => locUnlocked(li) && (k===0 || !!state.done[li+'-'+(
 const svgEl = (tag,attrs) => { const n=document.createElementNS('http://www.w3.org/2000/svg',tag); for(const k in attrs) n.setAttribute(k,attrs[k]); return n; };
 const starsText = n => '⭐'.repeat(n)+'☆'.repeat(3-n);
 
+/* =====================================================================
+   🗺️ ІЛЮСТРОВАНА КАРТА НА ВЕСЬ ЕКРАН (горизонтальна, 2000×923)
+   worldMap() — загальна карта з 5 локаціями; locationScreen() — стежка з 10 рівнів.
+   ===================================================================== */
+let hintShown=false;
+function rotateHint(){ if(!hintShown&&innerHeight>innerWidth){ hintShown=true; toast('📱↔️ Поверни телефон горизонтально — так зручніше'); } }
+function openScene(){
+  const ov=el('div',{class:'stage-ov scene'}), stg=el('div',{class:'stg'}), cv=el('canvas',{width:SW,height:SH});
+  stg.append(cv); ov.append(stg); document.body.append(ov);
+  const fit=()=>{ const vw=innerWidth,vh=innerHeight,port=vh>vw;
+    const s=port?Math.min(vh/SW,vw/SH):Math.min(vw/SW,vh/SH);
+    stg.style.transform=`translate(-50%,-50%) ${port?'rotate(90deg) ':''}scale(${s})`; };
+  fit(); window.addEventListener('resize',fit); rotateHint();
+  const close=()=>{ window.removeEventListener('resize',fit); ov.remove(); };
+  onCleanup(close);
+  return {c:cv.getContext('2d'),stg,close};
+}
+const mid=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+function blob(c,pts){ const n=pts.length, m0=mid(pts[n-1],pts[0]); c.beginPath(); c.moveTo(m0.x,m0.y);
+  for(let i=0;i<n;i++){ const p=pts[i], m=mid(p,pts[(i+1)%n]); c.quadraticCurveTo(p.x,p.y,m.x,m.y); } c.closePath(); }
+function tree(c,x,y,s,col){ c.fillStyle='#8a5a2b'; c.fillRect(x-4*s,y-6*s,8*s,16*s); c.fillStyle=col||'#6fbf73';
+  for(const [dy,w] of [[-4,26],[-22,21],[-38,15]]){ c.beginPath(); c.moveTo(x-w*s,y+dy*s); c.lineTo(x+w*s,y+dy*s); c.lineTo(x,y+(dy-24)*s); c.closePath(); c.fill(); } }
+function mountain(c,x,y,w,h,col){ c.fillStyle=col; c.beginPath(); c.moveTo(x-w/2,y); c.lineTo(x,y-h); c.lineTo(x+w/2,y); c.closePath(); c.fill();
+  c.fillStyle='#00000018'; c.beginPath(); c.moveTo(x,y-h); c.lineTo(x+w/2,y); c.lineTo(x+w*.08,y); c.closePath(); c.fill();
+  c.fillStyle='#fff'; c.beginPath(); c.moveTo(x,y-h); c.lineTo(x-w*.12,y-h*.72); c.lineTo(x-w*.03,y-h*.77); c.lineTo(x+w*.04,y-h*.7); c.lineTo(x+w*.12,y-h*.72); c.closePath(); c.fill(); }
+function cloud(c,x,y,s,a){ c.fillStyle=`rgba(255,255,255,${a??.9})`; for(const [dx,dy,r] of [[0,0,34],[38,-12,42],[80,0,34],[40,10,40]]){ c.beginPath(); c.arc(x+dx*s,y+dy*s,r*s,0,7); c.fill(); } }
+function ribbon(c,cx,cy,w,h,txt,size,col){ c.fillStyle=col||'#ff74ad'; c.strokeStyle='#fff'; c.lineWidth=8; rr(c,cx-w/2,cy-h/2,w,h,h/2); c.fill(); c.stroke();
+  stageText(c,txt,cx,cy+2,size,'#fff','#a82d66'); }
+function frame(c){ c.strokeStyle='#a54f6a'; c.lineWidth=20; rr(c,10,10,SW-20,SH-20,38); c.stroke(); c.strokeStyle='#ffd98a'; c.lineWidth=5; c.setLineDash([22,14]); rr(c,32,32,SW-64,SH-64,26); c.stroke(); c.setLineDash([]); }
+function road(c,pts,col){ c.lineCap='round'; c.lineJoin='round'; c.beginPath(); c.moveTo(pts[0].x,pts[0].y);
+  for(let i=1;i<pts.length;i++){ const a=pts[i-1],b=pts[i],mx=(a.x+b.x)/2; c.bezierCurveTo(mx,a.y,mx,b.y,b.x,b.y); }
+  c.strokeStyle='#fff'; c.lineWidth=46; c.stroke(); c.strokeStyle=col||'#f4c2d8'; c.lineWidth=30; c.stroke();
+  c.strokeStyle='#ffffffcc'; c.lineWidth=5; c.setLineDash([20,18]); c.stroke(); c.setLineDash([]); }
+
+/* --- орієнтири локацій (малюються над вузлом x,y) --- */
+const LANDMARKS=[
+  (c,x,y)=>{ const b=y-74; /* Знайомство: два будиночки, лавка, дерево, серце */
+    for(const [dx,w,h,roof] of [[-130,100,84,'#ff7ab5'],[10,84,70,'#ffa94d']]){ c.fillStyle='#fff6e6'; c.fillRect(x+dx,b-h,w,h); c.fillStyle=roof; c.beginPath(); c.moveTo(x+dx-12,b-h); c.lineTo(x+dx+w/2,b-h-52); c.lineTo(x+dx+w+12,b-h); c.closePath(); c.fill();
+      c.fillStyle='#8a5a2b'; c.fillRect(x+dx+w/2-11,b-34,22,34); c.fillStyle='#bfe8ff'; c.fillRect(x+dx+10,b-h+14,20,20); }
+    tree(c,x+150,b+6,1.1); c.fillStyle='#a0693b'; c.fillRect(x-30,b-12,60,8); c.fillRect(x-24,b-4,6,14); c.fillRect(x+18,b-4,6,14);
+    stageText(c,'💕',x-60,b-150,44,'#fff'); },
+  (c,x,y)=>{ const b=y-74; /* Перші побачення: кав'ярня + колесо огляду */
+    c.strokeStyle='#a54f6a'; c.lineWidth=7; const cx=x+120,cy=b-86; c.beginPath(); c.arc(cx,cy,64,0,7); c.stroke(); c.lineWidth=3;
+    for(let a=0;a<8;a++){ c.beginPath(); c.moveTo(cx,cy); c.lineTo(cx+64*Math.cos(a*Math.PI/4),cy+64*Math.sin(a*Math.PI/4)); c.stroke(); c.fillStyle=['#ff7ab5','#ffd23f','#7ad0ff','#9af08a'][a%4]; c.beginPath(); c.arc(cx+64*Math.cos(a*Math.PI/4),cy+64*Math.sin(a*Math.PI/4),9,0,7); c.fill(); }
+    c.lineWidth=7; c.beginPath(); c.moveTo(cx-34,b); c.lineTo(cx,cy); c.lineTo(cx+34,b); c.stroke();
+    c.fillStyle='#fff'; c.fillRect(x-120,b-86,150,86); c.strokeStyle='#e5c8d4'; c.lineWidth=4; c.strokeRect(x-120,b-86,150,86);
+    for(let i=0;i<6;i++){ c.fillStyle=i%2?'#fff':'#ff74ad'; c.fillRect(x-128+i*26,b-104,26,28); } c.fillStyle='#8a5a2b'; c.fillRect(x-70,b-46,34,46); c.fillStyle='#bfe8ff'; c.fillRect(x-114,b-62,30,28); c.fillRect(x-10,b-62,30,28);
+    stageText(c,'☕',x-52,b-130,48,'#fff'); },
+  (c,x,y)=>{ const b=y-74; /* Смаки: піцерія з великою піцою */
+    c.fillStyle='#ffe9c9'; c.fillRect(x-130,b-84,150,84); c.fillStyle='#e63946'; c.fillRect(x-140,b-100,170,24); c.fillStyle='#8a5a2b'; c.fillRect(x-80,b-48,32,48); c.fillStyle='#bfe8ff'; c.fillRect(x-124,b-66,30,26); c.fillRect(x-28,b-66,30,26);
+    c.fillStyle='#b5651d'; c.fillRect(x-100,b-132,22,34); for(let i=0;i<3;i++){ c.fillStyle='#ffffffcc'; c.beginPath(); c.arc(x-89+i*8,b-144-i*18,10+i*3,0,7); c.fill(); }
+    c.fillStyle='#ffb44d'; c.beginPath(); c.arc(x+110,b-70,60,0,7); c.fill(); c.fillStyle='#ffd66b'; c.beginPath(); c.arc(x+110,b-70,50,0,7); c.fill();
+    c.fillStyle='#e63946'; for(const [dx,dy] of [[-20,-20],[18,-14],[-6,16],[24,20],[-30,10],[2,-34]]){ c.beginPath(); c.arc(x+110+dx,b-70+dy,9,0,7); c.fill(); } },
+  (c,x,y)=>{ const b=y-74; /* Подорожі: гори, маяк, пальма */
+    mountain(c,x-150,b+10,150,120,'#b8a5e0'); mountain(c,x+10,b+10,190,160,'#a690d8');
+    c.fillStyle='#fff'; c.beginPath(); c.moveTo(x+60,b); c.lineTo(x+72,b-130); c.lineTo(x+110,b-130); c.lineTo(x+122,b); c.closePath(); c.fill();
+    for(let i=0;i<3;i++){ c.fillStyle='#e63946'; c.fillRect(x+64+i*0,b-110+i*40,56-i*0,18); }
+    c.fillStyle='#ffd23f'; rr(c,x+76,b-156,30,26,6); c.fill(); c.fillStyle='#e63946'; c.beginPath(); c.moveTo(x+70,b-156); c.lineTo(x+91,b-182); c.lineTo(x+112,b-156); c.closePath(); c.fill();
+    c.strokeStyle='#8a5a2b'; c.lineWidth=9; c.beginPath(); c.moveTo(x+170,b+10); c.quadraticCurveTo(x+176,b-50,x+160,b-90); c.stroke();
+    c.fillStyle='#4caf50'; for(const a of [-2.6,-2,-1.2,-.5]){ c.save(); c.translate(x+160,b-90); c.rotate(a); c.beginPath(); c.ellipse(34,0,38,10,0,0,7); c.fill(); c.restore(); } },
+  (c,x,y)=>{ const b=y-74; /* Майбутнє: замок і веселка */
+    const cols=['#ff5c7a','#ffa94d','#ffe066','#9af08a','#7ad0ff','#c9a0ff'];
+    cols.forEach((col,i)=>{ c.strokeStyle=col; c.lineWidth=14; c.beginPath(); c.arc(x,b+20,190-i*14,Math.PI,2*Math.PI); c.stroke(); });
+    const tower=(tx,w,h)=>{ c.fillStyle='#ffe0ef'; c.fillRect(tx-w/2,b-h,w,h); c.strokeStyle='#e5b5cc'; c.lineWidth=3; c.strokeRect(tx-w/2,b-h,w,h);
+      c.fillStyle='#ff74ad'; c.beginPath(); c.moveTo(tx-w/2-8,b-h); c.lineTo(tx,b-h-52); c.lineTo(tx+w/2+8,b-h); c.closePath(); c.fill();
+      c.fillStyle='#a54f6a'; c.fillRect(tx-5,b-h+22,10,22); c.strokeStyle='#8a5a2b'; c.lineWidth=3; c.beginPath(); c.moveTo(tx,b-h-52); c.lineTo(tx,b-h-76); c.stroke(); c.fillStyle='#ffd23f'; c.beginPath(); c.moveTo(tx,b-h-76); c.lineTo(tx+24,b-h-68); c.lineTo(tx,b-h-60); c.closePath(); c.fill(); };
+    c.fillStyle='#ffe0ef'; c.fillRect(x-64,b-110,128,110); c.strokeStyle='#e5b5cc'; c.lineWidth=3; c.strokeRect(x-64,b-110,128,110);
+    for(let i=0;i<5;i++) c.fillRect(x-64+i*28,b-124,18,16);
+    tower(x-100,54,150); tower(x+100,54,150); c.fillStyle='#a54f6a'; c.beginPath(); c.moveTo(x-26,b); c.lineTo(x-26,b-44); c.arc(x,b-44,26,Math.PI,0); c.lineTo(x+26,b); c.closePath(); c.fill(); }
+];
+function paintWorld(c,P){
+  const sea=c.createLinearGradient(0,0,0,SH); sea.addColorStop(0,'#7fd0f2'); sea.addColorStop(1,'#a9e4f8'); c.fillStyle=sea; c.fillRect(0,0,SW,SH);
+  c.strokeStyle='#ffffff77'; c.lineWidth=4; for(let i=0;i<46;i++){ const x=(i*173)%SW, y=(i*97)%SH; c.beginPath(); c.arc(x,y,16,Math.PI*1.1,Math.PI*1.9); c.stroke(); c.beginPath(); c.arc(x+30,y+4,16,Math.PI*1.1,Math.PI*1.9); c.stroke(); }
+  const land=[{x:140,y:300},{x:260,y:150},{x:520,y:120},{x:800,y:170},{x:1100,y:110},{x:1400,y:160},{x:1700,y:110},{x:1880,y:260},{x:1910,y:560},{x:1800,y:800},{x:1500,y:840},{x:1200,y:800},{x:900,y:860},{x:600,y:810},{x:300,y:850},{x:110,y:640}];
+  blob(c,land); c.strokeStyle='#ffe7a8'; c.lineWidth=46; c.stroke(); c.fillStyle='#fff1d8'; c.fill();
+  c.save(); blob(c,land); c.clip();
+  for(const [x,y,rx,ry,col] of [[420,420,260,150,'#dff0b8'],[900,720,320,120,'#d8efb0'],[1300,500,300,160,'#e6f4c2'],[1640,300,240,130,'#d8efb0'],[330,720,200,90,'#e6f4c2']]){ c.fillStyle=col; c.beginPath(); c.ellipse(x,y,rx,ry,0,0,7); c.fill(); }
+  /* озеро й річка */
+  c.fillStyle='#8fd3f4'; c.beginPath(); c.ellipse(820,470,150,64,.1,0,7); c.fill(); c.strokeStyle='#fff'; c.lineWidth=6; c.stroke();
+  c.strokeStyle='#8fd3f4'; c.lineWidth=26; c.lineCap='round'; c.beginPath(); c.moveTo(1180,130); c.bezierCurveTo(1120,300,1260,420,1140,560); c.bezierCurveTo(1060,680,1160,760,1100,860); c.stroke();
+  /* гори */
+  for(const [x,y,w,h,col] of [[360,300,190,150,'#c3b2e8'],[470,290,230,200,'#b8a5e0'],[1560,230,210,170,'#c3b2e8'],[1680,250,260,210,'#b8a5e0'],[1010,230,180,130,'#c3b2e8']]) mountain(c,x,y,w,h,col);
+  /* ліси */
+  for(const [x0,y0,n] of [[580,560,8],[1360,700,9],[260,500,6],[1690,470,7],[860,260,6],[1280,330,5]]) for(let i=0;i<n;i++) tree(c,x0+(i%4)*38+((i*17)%9),y0+Math.floor(i/4)*34,.9+((i*7)%3)*.12,i%2?'#6fbf73':'#5aae62');
+  c.restore();
+  const ptsRoad=[{x:110,y:790},...P,{x:1880,y:470}];
+  road(c,ptsRoad);
+  LANDMARKS.forEach((fn,i)=>fn(c,P[i].x,P[i].y));
+  frame(c);
+  ribbon(c,1000,72,820,104,'Карта нашої історії',58);
+  /* компас */
+  c.save(); c.translate(150,250); c.fillStyle='#fff8e8'; c.strokeStyle='#a54f6a'; c.lineWidth=6; c.beginPath(); c.arc(0,0,76,0,7); c.fill(); c.stroke();
+  for(let a=0;a<4;a++){ c.save(); c.rotate(a*Math.PI/2); c.fillStyle=a===0?'#e63946':'#f0509a'; c.beginPath(); c.moveTo(0,-68); c.lineTo(14,0); c.lineTo(-14,0); c.closePath(); c.fill(); c.restore(); }
+  stageText(c,'N',0,-90,26,'#fff','#a54f6a'); c.restore();
+}
+function animWorld(c,t){
+  for(let i=0;i<4;i++){ const x=((i*620+t*22)%2500)-300; cloud(c,x,130+(i%2)*60+Math.sin(t*.4+i)*8,1.1,.8); }
+  const bx=260+Math.sin(t*.3)*60, by=880+Math.sin(t*1.2)*5; c.save(); c.translate(bx,by-30); c.fillStyle='#fff'; c.beginPath(); c.moveTo(0,-70); c.lineTo(44,-6); c.lineTo(0,-6); c.closePath(); c.fill(); c.fillStyle='#ff74ad'; rr(c,-44,-6,100,22,8); c.fill(); c.restore();
+  const px=((t*80)%2300)-150; stageText(c,'✈️',px,300+Math.sin(t)*14,60,'#fff');
+  for(let i=0;i<6;i++){ const a=(Math.sin(t*2+i*1.7)+1)/2; c.fillStyle=`rgba(255,255,255,${a})`; const x=90+(i*337)%1820,y=60+(i*211)%780; if(x<160||x>1840||y<130||y>800){ c.beginPath(); c.arc(x,y,5,0,7); c.fill(); } }
+}
+function sceneHud(tr){
+  const next=LEVELS.find((L,i)=>!state.lvl.has(i));
+  const fill=el('i'); fill.style.width=(Math.min(state._s,MAX_SCORE)/MAX_SCORE*100)+'%';
+  return el('div',{class:'shud'+(tr?' tr':''),onclick:openRewards},
+    el('b',{text:`⭐ ${state._s}/${MAX_SCORE}`}), el('div',{class:'sbar'},fill),
+    el('span',{text:`🎁 ${state.lvl.size}/${LEVELS.length}`}), el('span',{text:'❤️'.repeat(state.lives)+'🖤'.repeat(Math.max(0,3-state.lives))}),
+    next?el('small',{text:`до призу ${next.icon}: ще ${next.at-state._s}`}):el('small',{text:'🏆 Усі призи!'}));
+}
+function sceneLabel(x,y,title,sub,w){ const l=el('div',{class:'mlabel'},el('b',{text:title}),el('small',{text:sub})); l.style.left=x+'px'; l.style.top=y+'px'; if(w) l.style.minWidth=w+'px'; return l; }
+
 function worldMap(){
   stopGame();
-  const N=WORLD.length, STEP=150, H=N*STEP+90;
-  const xs=[80,215,90,215,150];
-  const pos=WORLD.map((_,i)=>({x:xs[i%xs.length],y:H-80-i*STEP}));
-  const map=el('div',{class:'wmap'}); map.style.height=H+'px';
-  const svg=svgEl('svg',{class:'wsvg',viewBox:`0 0 300 ${H}`,width:'300',height:H});
-  let d=`M ${pos[0].x} ${pos[0].y}`;
-  for(let i=1;i<N;i++){ const m=(pos[i-1].y+pos[i].y)/2; d+=` C ${pos[i-1].x} ${m}, ${pos[i].x} ${m}, ${pos[i].x} ${pos[i].y}`; }
-  svg.append(svgEl('path',{d,fill:'none',stroke:'#fff',['stroke-width']:'16','stroke-linecap':'round',opacity:'.9'}), svgEl('path',{d,fill:'none',stroke:'#f0509a',['stroke-width']:'5','stroke-dasharray':'2 14','stroke-linecap':'round'}));
-  map.append(svg);
-  ['☁️','🌸','🌳','🦋','⭐','🌷','☁️','🎀'].forEach((e,i)=>{ const s=el('span',{class:'wdeco',text:e}); s.style.left=((i*97)%270+10)+'px'; s.style.top=((i*173)%(H-40)+10)+'px'; map.append(s); });
+  const sc=openScene(), c=sc.c, N=WORLD.length;
+  const P=[{x:250,y:640},{x:640,y:390},{x:1040,y:660},{x:1430,y:380},{x:1770,y:620}];
+  const bg=document.createElement('canvas'); bg.width=SW; bg.height=SH; paintWorld(bg.getContext('2d'),P);
+  let t=0; raf(dt=>{ t+=dt; c.drawImage(bg,0,0); animWorld(c,t); });
   let curIdx=WORLD.findIndex((_,i)=>locUnlocked(i)&&locProgress(i)<WORLD[i].levels.length); if(curIdx<0) curIdx=N-1;
   WORLD.forEach((L,i)=>{
     const open=locUnlocked(i), prog=locProgress(i), full=prog===L.levels.length;
-    const nd=el('button',{class:'wnode'+(open?'':' lock')+(full?' full':'')+(i===curIdx?' cur':''),onclick:()=>{ if(open) locationScreen(i); else { nd.classList.remove('shake'); void nd.offsetWidth; nd.classList.add('shake'); vibrate(20); } }},
-      el('span',{class:'wic',text:open?L.emoji:'🔒'}));
-    nd.style.left=(pos[i].x-44)+'px'; nd.style.top=(pos[i].y-44)+'px'; nd.style.background=open?L.color:'#cfc3cc';
-    const chip=el('div',{class:'wchip'},el('b',{text:L.name}),el('small',{text:open?`${prog}/${L.levels.length}${full?' ✅':''}`:'Закрито'}));
-    chip.style.left=(pos[i].x-75)+'px'; chip.style.top=(pos[i].y+50)+'px';
-    map.append(nd,chip);
-    if(i===curIdx){ const pin=el('span',{class:'wpin',text:'🧸'}); pin.style.left=(pos[i].x-14)+'px'; pin.style.top=(pos[i].y-82)+'px'; map.append(pin); }
+    const nd=el('button',{class:'mnode'+(open?'':' lock')+(full?' full':'')+(i===curIdx?' cur':''),text:open?L.emoji:'🔒',
+      onclick:()=>{ if(open) locationScreen(i); else { nd.classList.remove('shake'); void nd.offsetWidth; nd.classList.add('shake'); vibrate(20); } }});
+    nd.style.left=P[i].x+'px'; nd.style.top=P[i].y+'px'; nd.style.background=open?L.color:'#cfc3cc';
+    sc.stg.append(nd, sceneLabel(P[i].x,P[i].y+84,L.name,open?`${prog}/${L.levels.length}${full?' ✅':''}`:'Закрито'));
+    if(i===curIdx){ const pin=el('span',{class:'mpin',text:'🧸'}); pin.style.left=(P[i].x+58)+'px'; pin.style.top=(P[i].y-92)+'px'; sc.stg.append(pin); }
   });
-  render(el('div',{class:'card'},
-    el('h2',{text:'🗺️ Карта нашої історії'}),
-    xpBar(),
-    el('p',{class:'center',style:'font-size:.9rem',text:`5 локацій × 10 рівнів. Привіт, ${state.name}! Обери локацію 👇`}),
-    map));
-  requestAnimationFrame(()=>{ const t=map.getBoundingClientRect().top+window.scrollY+pos[curIdx].y-300; window.scrollTo({top:Math.max(0,t)}); });
+  sc.stg.append(sceneHud(true));
+  const back=el('button',{class:'sback',text:'🏠 Меню',onclick:()=>{ stopGame(); startScreen(); }}); sc.stg.append(back);
 }
 
+/* --- локація: горизонтальна стежка з 10 рівнів --- */
+const SCENE_SKY=[['#ffc6e0','#fff0f6'],['#ffdcb8','#fff4e6'],['#fff0b0','#fffbe6'],['#b8e4ff','#e8f7ff'],['#dcc8ff','#f6efff']];
+const SCENE_HILL=[['#ffb3d4','#ff9ec7'],['#ffc98f','#ffb36b'],['#ffe08a','#ffd166'],['#9ed8a0','#7bc67f'],['#c9a8f5','#b48ae8']];
+const SCENE_DECO=[['🌸','👀','🌷','💕'],['☕','💕','🍰','🌹'],['🍕','🍓','🧁','🍩'],['✈️','🌴','⛰️','🧳'],['🏰','🌈','⭐','💍']];
 function locationScreen(li){
   stopGame(); state.loc=li;
-  const L=WORLD[li], n=L.levels.length, STEP=88, H=n*STEP+50;
-  const xs=[60,150,240,150];
-  const pos=L.levels.map((_,k)=>({x:xs[k%xs.length],y:H-50-k*STEP}));
-  const path=el('div',{class:'lpath'}); path.style.height=H+'px';
-  const svg=svgEl('svg',{class:'wsvg',viewBox:`0 0 300 ${H}`,width:'300',height:H});
-  svg.append(svgEl('polyline',{points:pos.map(p=>`${p.x},${p.y}`).join(' '),fill:'none',stroke:'#fff',['stroke-width']:'14','stroke-linecap':'round','stroke-linejoin':'round'}),
-             svgEl('polyline',{points:pos.map(p=>`${p.x},${p.y}`).join(' '),fill:'none',stroke:L.color,['stroke-width']:'5','stroke-dasharray':'2 12','stroke-linecap':'round','stroke-linejoin':'round'}));
-  path.append(svg);
+  const L=WORLD[li], n=L.levels.length, sc=openScene(), c=sc.c;
+  const P=L.levels.map((_,k)=>({x:170+k*184,y:540+Math.sin(k*1.1+li)*150}));
+  const bg=document.createElement('canvas'); bg.width=SW; bg.height=SH; const b=bg.getContext('2d');
+  const sky=b.createLinearGradient(0,0,0,SH); sky.addColorStop(0,SCENE_SKY[li][0]); sky.addColorStop(1,SCENE_SKY[li][1]); b.fillStyle=sky; b.fillRect(0,0,SW,SH);
+  const hill=(y,amp,col,ph)=>{ b.fillStyle=col; b.beginPath(); b.moveTo(0,SH); for(let x=0;x<=SW;x+=40) b.lineTo(x,y+Math.sin(x/260+ph)*amp); b.lineTo(SW,SH); b.closePath(); b.fill(); };
+  hill(520,60,SCENE_HILL[li][0],0); hill(650,50,SCENE_HILL[li][1],2);
+  for(let i=0;i<14;i++) tree(b,80+i*140+((i*53)%40),700+((i*37)%120),1+((i*7)%4)*.12,i%2?'#6fbf73':'#58ad63');
+  road(b,P,L.color);
+  const dec=SCENE_DECO[li]; for(let i=0;i<22;i++){ const x=60+((i*257)%1880), y=130+((i*131)%700); if(Math.abs(y-(540+Math.sin(((x-170)/184)*1.1+li)*150))<120) continue; stageText(b,dec[i%dec.length],x,y,i%3?44:62,'#fff'); }
+  frame(b); ribbon(b,1000,92,560,100,`${L.emoji} ${L.name}`,50,L.color);
+  let t=0; raf(dt=>{ t+=dt; c.drawImage(bg,0,0); for(let i=0;i<3;i++) cloud(c,((i*760+t*26)%2500)-300,200+(i%2)*80,1.1,.75); });
   let curK=L.levels.findIndex((_,k)=>!state.done[li+'-'+k]); if(curK<0) curK=n;
   L.levels.forEach((tok,k)=>{
     const key=li+'-'+k, done=state.done[key], unlocked=lvlUnlocked(li,k);
     const boss=tok==='boss'||k===n-1, icon=tok==='boss'?'👑':tok.startsWith('g:')?'🎮':'❓';
-    const nd=el('button',{class:'lnode'+(done?' done':'')+(k===curK?' cur':'')+(!unlocked?' lock':'')+(boss?' boss':''),
-      onclick:()=>{ if(done){ toast(`Рівень ${k+1} уже пройдено ✅ ${starsText(done)}`); } else if(!unlocked){ nd.classList.remove('shake'); void nd.offsetWidth; nd.classList.add('shake'); vibrate(20); } else startLevel(li,k); }},
-      el('span',{class:'lnum',text:k+1}), el('span',{class:'lic',text:!unlocked?'🔒':done?'✅':icon}));
-    nd.style.left=(pos[k].x-(boss?34:28))+'px'; nd.style.top=(pos[k].y-(boss?34:28))+'px'; nd.style.setProperty('--lc',L.color);
-    path.append(nd);
-    if(done){ const st=el('div',{class:'lstar',text:starsText(done)}); st.style.left=(pos[k].x-30)+'px'; st.style.top=(pos[k].y+(boss?36:30))+'px'; path.append(st); }
+    const nd=el('button',{class:'snode'+(done?' done':'')+(k===curK?' cur':'')+(!unlocked?' lock':'')+(boss?' boss':''),
+      onclick:()=>{ if(done) toast(`Рівень ${k+1} уже пройдено ✅ ${starsText(done)}`); else if(!unlocked){ nd.classList.remove('shake'); void nd.offsetWidth; nd.classList.add('shake'); vibrate(20); } else startLevel(li,k); }},
+      el('span',{class:'snum',text:k+1}), !unlocked?'🔒':done?'✅':icon);
+    nd.style.left=P[k].x+'px'; nd.style.top=P[k].y+'px'; nd.style.setProperty('--lc',L.color);
+    sc.stg.append(nd);
+    if(done){ const st=el('div',{class:'sstar',text:starsText(done)}); st.style.left=P[k].x+'px'; st.style.top=(P[k].y+(boss?86:70))+'px'; sc.stg.append(st); }
+    if(k===curK){ const pin=el('span',{class:'mpin',text:'🧸'}); pin.style.left=(P[k].x+30)+'px'; pin.style.top=(P[k].y-118)+'px'; sc.stg.append(pin); }
   });
-  render(el('div',{class:'card'},
-    el('button',{class:'btn ghost',style:'margin:0 0 14px',text:'🗺️ До карти',onclick:worldMap}),
-    el('span',{class:'big-emoji',text:L.emoji}),
-    el('h2',{style:'margin-bottom:6px',text:L.name}),
-    el('p',{class:'center',style:'font-size:.9rem',text:`${L.text} • ${locProgress(li)}/${n}`}),
-    xpBar(), path));
-  requestAnimationFrame(()=>{ const t=path.getBoundingClientRect().top+window.scrollY+(pos[Math.min(curK,n-1)].y)-320; window.scrollTo({top:Math.max(0,t)}); });
+  sc.stg.append(sceneHud());
+  sc.stg.append(el('button',{class:'sback',text:'🗺️ До карти',onclick:worldMap}));
+  const prog=el('div',{class:'sprog',text:`${locProgress(li)}/${n} • ${L.text}`}); sc.stg.append(prog);
 }
+
 function toast(m){ const n=el('div',{class:'toast',text:m}); document.body.append(n); setTimeout(()=>n.remove(),2200); }
 
 function startLevel(li,k){
-  state.loc=li; state.lv=k; state.lastStars=1; state.answered=false;
+  stopGame(); state.loc=li; state.lv=k; state.lastStars=1; state.answered=false;
   const tok=WORLD[li].levels[k];
   if(tok==='boss') return bossScreen();
   if(tok.startsWith('g:')) return gameIntro(GAME_BY[tok.slice(2)]());
@@ -1303,7 +1428,7 @@ function openStage(onTap,onSkip){
   const fit=()=>{ const vw=innerWidth,vh=innerHeight,port=vh>vw;
     const s=port?Math.min(vh/SW,vw/SH):Math.min(vw/SW,vh/SH);
     stg.style.transform=`translate(-50%,-50%) ${port?'rotate(90deg) ':''}scale(${s})`; };
-  fit(); window.addEventListener('resize',fit);
+  fit(); window.addEventListener('resize',fit); rotateHint();
   const close=()=>{ window.removeEventListener('resize',fit); ov.remove(); };
   onCleanup(close); tap(stg,onTap);
   return {c:cv.getContext('2d'),close};
