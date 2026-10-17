@@ -195,6 +195,7 @@
   .paw.cp{right:10%;top:-30px;background:#f5a623;border:4px solid #8a5a00}.paw.cp.grab{transform:translate(-95px,95px)}
   .paw.stun{animation:shake .4s 2;filter:grayscale(1)}
 
+  .hudback{border:0;font:inherit;font-size:.9rem;cursor:pointer;color:var(--ink)}
   .stage-ov{position:fixed;inset:0;background:#1a0b14;z-index:50;overflow:hidden;touch-action:none}
   .stg{position:absolute;left:50%;top:50%;width:2000px;height:923px;transform-origin:center center;touch-action:none;user-select:none;-webkit-user-select:none}
   .stg canvas{display:block;width:2000px;height:923px}
@@ -618,7 +619,7 @@ const starsText = n => '⭐'.repeat(n)+'☆'.repeat(3-n);
 
 /* =====================================================================
    🗺️ ІЛЮСТРОВАНА КАРТА НА ВЕСЬ ЕКРАН (горизонтальна, 2000×923)
-   worldMap() — загальна карта з 5 локаціями; locationScreen() — стежка з 10 рівнів.
+   worldMap() — загальна карта з 5 локаціями; вхід у локацію запускає її 10 рівнів поспіль.
    ===================================================================== */
 let hintShown=false;
 function rotateHint(){ if(!hintShown&&innerHeight>innerWidth){ hintShown=true; toast('📱↔️ Поверни телефон горизонтально — так зручніше'); } }
@@ -737,7 +738,7 @@ function worldMap(){
   WORLD.forEach((L,i)=>{
     const open=locUnlocked(i), prog=locProgress(i), full=prog===L.levels.length;
     const nd=el('button',{class:'mnode'+(open?'':' lock')+(full?' full':'')+(i===curIdx?' cur':''),text:open?L.emoji:'🔒',
-      onclick:()=>{ if(open) locationScreen(i); else { nd.classList.remove('shake'); void nd.offsetWidth; nd.classList.add('shake'); vibrate(20); } }});
+      onclick:()=>{ if(open) enterLocation(i); else { nd.classList.remove('shake'); void nd.offsetWidth; nd.classList.add('shake'); vibrate(20); } }});
     nd.style.left=P[i].x+'px'; nd.style.top=P[i].y+'px'; nd.style.background=open?L.color:'#cfc3cc';
     sc.stg.append(nd, sceneLabel(P[i].x,P[i].y+84,L.name,open?`${prog}/${L.levels.length}${full?' ✅':''}`:'Закрито'));
     if(i===curIdx){ const pin=el('span',{class:'mpin',text:'🧸'}); pin.style.left=(P[i].x+58)+'px'; pin.style.top=(P[i].y-92)+'px'; sc.stg.append(pin); }
@@ -746,42 +747,23 @@ function worldMap(){
   const back=el('button',{class:'sback',text:'🏠 Меню',onclick:()=>{ stopGame(); startScreen(); }}); sc.stg.append(back);
 }
 
-/* --- локація: горизонтальна стежка з 10 рівнів --- */
-const SCENE_SKY=[['#ffc6e0','#fff0f6'],['#ffdcb8','#fff4e6'],['#fff0b0','#fffbe6'],['#b8e4ff','#e8f7ff'],['#dcc8ff','#f6efff']];
-const SCENE_HILL=[['#ffb3d4','#ff9ec7'],['#ffc98f','#ffb36b'],['#ffe08a','#ffd166'],['#9ed8a0','#7bc67f'],['#c9a8f5','#b48ae8']];
-const SCENE_DECO=[['🌸','👀','🌷','💕'],['☕','💕','🍰','🌹'],['🍕','🍓','🧁','🍩'],['✈️','🌴','⛰️','🧳'],['🏰','🌈','⭐','💍']];
-function locationScreen(li){
-  stopGame(); state.loc=li;
-  const L=WORLD[li], n=L.levels.length, sc=openScene(), c=sc.c;
-  const P=L.levels.map((_,k)=>({x:170+k*184,y:540+Math.sin(k*1.1+li)*150}));
-  const bg=document.createElement('canvas'); bg.width=SW; bg.height=SH; const b=bg.getContext('2d');
-  const sky=b.createLinearGradient(0,0,0,SH); sky.addColorStop(0,SCENE_SKY[li][0]); sky.addColorStop(1,SCENE_SKY[li][1]); b.fillStyle=sky; b.fillRect(0,0,SW,SH);
-  const hill=(y,amp,col,ph)=>{ b.fillStyle=col; b.beginPath(); b.moveTo(0,SH); for(let x=0;x<=SW;x+=40) b.lineTo(x,y+Math.sin(x/260+ph)*amp); b.lineTo(SW,SH); b.closePath(); b.fill(); };
-  hill(520,60,SCENE_HILL[li][0],0); hill(650,50,SCENE_HILL[li][1],2);
-  for(let i=0;i<14;i++) tree(b,80+i*140+((i*53)%40),700+((i*37)%120),1+((i*7)%4)*.12,i%2?'#6fbf73':'#58ad63');
-  road(b,P,L.color);
-  const dec=SCENE_DECO[li]; for(let i=0;i<22;i++){ const x=60+((i*257)%1880), y=130+((i*131)%700); if(Math.abs(y-(540+Math.sin(((x-170)/184)*1.1+li)*150))<120) continue; stageText(b,dec[i%dec.length],x,y,i%3?44:62,'#fff'); }
-  frame(b); ribbon(b,1000,92,560,100,`${L.emoji} ${L.name}`,50,L.color);
-  let t=0; raf(dt=>{ t+=dt; c.drawImage(bg,0,0); for(let i=0;i<3;i++) cloud(c,((i*760+t*26)%2500)-300,200+(i%2)*80,1.1,.75); });
-  let curK=L.levels.findIndex((_,k)=>!state.done[li+'-'+k]); if(curK<0) curK=n;
-  L.levels.forEach((tok,k)=>{
-    const key=li+'-'+k, done=state.done[key], unlocked=lvlUnlocked(li,k);
-    const boss=tok==='boss'||k===n-1, icon=tok==='boss'?'👑':tok.startsWith('g:')?'🎮':'❓';
-    const nd=el('button',{class:'snode'+(done?' done':'')+(k===curK?' cur':'')+(!unlocked?' lock':'')+(boss?' boss':''),
-      onclick:()=>{ if(done) toast(`Рівень ${k+1} уже пройдено ✅ ${starsText(done)}`); else if(!unlocked){ nd.classList.remove('shake'); void nd.offsetWidth; nd.classList.add('shake'); vibrate(20); } else startLevel(li,k); }},
-      el('span',{class:'snum',text:k+1}), !unlocked?'🔒':done?'✅':icon);
-    nd.style.left=P[k].x+'px'; nd.style.top=P[k].y+'px'; nd.style.setProperty('--lc',L.color);
-    sc.stg.append(nd);
-    if(done){ const st=el('div',{class:'sstar',text:starsText(done)}); st.style.left=P[k].x+'px'; st.style.top=(P[k].y+(boss?86:70))+'px'; sc.stg.append(st); }
-    if(k===curK){ const pin=el('span',{class:'mpin',text:'🧸'}); pin.style.left=(P[k].x+30)+'px'; pin.style.top=(P[k].y-118)+'px'; sc.stg.append(pin); }
-  });
-  sc.stg.append(sceneHud());
-  sc.stg.append(el('button',{class:'sback',text:'🗺️ До карти',onclick:worldMap}));
-  const prog=el('div',{class:'sprog',text:`${locProgress(li)}/${n} • ${L.text}`}); sc.stg.append(prog);
-}
-
 function toast(m){ const n=el('div',{class:'toast',text:m}); document.body.append(n); setTimeout(()=>n.remove(),2200); }
 
+function enterLocation(li){
+  const L=WORLD[li], n=L.levels.length, prog=locProgress(li);
+  if(prog>=n){ toast(`Локацію «${L.name}» вже пройдено ✅`); return; }
+  if(prog===0){
+    stopGame(); state.loc=li; state.lv=0;
+    return render(el('div',{class:'card center'},
+      el('span',{class:'big-emoji',text:L.emoji}),
+      el('p',{class:'pill',style:'display:inline-block;margin-bottom:10px',text:`Локація ${li+1} з ${WORLD.length}`}),
+      el('h2',{text:L.name}), el('p',{text:L.text}), el('p',{text:`${n} рівнів поспіль: питання й міні-ігри 🎮`}),
+      el('button',{class:'btn',text:'Поїхали! 🚀',onclick:()=>startLevel(li,0)}),
+      el('button',{class:'btn ghost',text:'🗺️ До карти',onclick:worldMap})));
+  }
+  const k=L.levels.findIndex((_,j)=>!state.done[li+'-'+j]);
+  startLevel(li,k<0?0:k);
+}
 function startLevel(li,k){
   stopGame(); state.loc=li; state.lv=k; state.lastStars=1; state.answered=false;
   const tok=WORLD[li].levels[k];
@@ -796,7 +778,7 @@ function levelDone(){
   saveGame();
   if(WORLD[li].levels[k]==='boss') return resultScreen();
   if(locProgress(li)===WORLD[li].levels.length) return locationComplete(li);
-  locationScreen(li);
+  startLevel(li,k+1);
 }
 function locationComplete(li){
   const L=WORLD[li], next=WORLD[li+1];
@@ -843,6 +825,7 @@ function introScreen(){
 function hud(){
   return [
     el('div',{class:'hud'},
+      el('button',{class:'pill hudback',text:'🗺️',onclick:()=>{ saveGame(); worldMap(); },'aria-label':'До карти'}),
       el('span',{class:'pill',text:`📍 ${WORLD[state.loc].emoji} ${state.lv+1}/${WORLD[state.loc].levels.length}`}),
       el('span',{class:'pill',text:'❤️'.repeat(state.lives)+'🖤'.repeat(Math.max(0,3-state.lives))}),
       el('span',{class:'pill',id:'streak',text: state.streak>1 ? `🔥 x${state.streak}` : '🔥 —'}),
