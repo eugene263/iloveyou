@@ -1116,22 +1116,22 @@ function stageText(c,t,x,y,size,fill,stroke){ c.font=`700 ${size}px Fredoka,sans
 
 /* ---------- 1) 🐔 Курка проти гравітації ---------- */
 function gameChicken(done){
-  const BANDS=[41,205,369,533,697,861], BT=41, CW=76, CH=72, CXS=920, LEN=7400, HW=195;
-  const gaps=[], obs=[], OW=56, OH=44;
+  const BANDS=[41,205,369,533,697,861], BT=41, CW=76, CH=72, CXS=920, LEN=6200;
+  const gaps=[], obs=[], OW=50, OH=44;
   for(let j=1;j<=4;j++){ let x=1200+Math.random()*500; while(x<LEN){ gaps.push({j,x,w:210}); x+=800+Math.random()*700; } }
   const solid=(j,wx)=> j===0||j===5 || !gaps.some(g=>g.j===j&&wx>g.x+6&&wx<g.x+g.w-6);
   /* бочки й ящики: стоять на платформі (top) або висять під нею (bottom) */
-  for(let x=1800;x<LEN-700;x+=480+Math.random()*280){ const j=Math.floor(Math.random()*6);
+  for(let x=1800;x<LEN-700;x+=560+Math.random()*320){ const j=Math.floor(Math.random()*6);
     const side=j===0?'bottom':j===5?'top':(Math.random()<.5?'top':'bottom');
     if(solid(j,x)&&solid(j,x+OW)) obs.push({j,x,side,crate:Math.random()<.5}); }
-  let cam=0,y=BANDS[2]-CH,vy=0,g=1,hits=0,inv=0,over=false,t=0,press=0;
+  let cam=0,y=BANDS[2]-CH,vy=0,g=1,hits=0,inv=0,over=false,t=0,press=0,restarts=0,boom=0,note='',noteT=0;
   const flip=()=>{ if(over) return; g=-g; vy=g*260; press=1; vibrate(8); };
   let ended=false; const fin=(pts,msg)=>{ if(ended) return; ended=true; over=true; stop(); later(()=>{ st.close(); done(pts,msg); },pts?500:0); };
   const st=openStage(flip,()=>fin(0,'Гру пропущено'));
   const c=st.c;
   const tile=(x,yy,w,i)=>{ c.fillStyle=(i%2)?'#2d7cc8':'#3d2153'; c.fillRect(x,yy,w,BT); };
   const stop=raf(dt=>{
-    t+=dt; press=Math.max(0,press-dt*6);
+    t+=dt; press=Math.max(0,press-dt*6); boom=Math.max(0,boom-dt); noteT=Math.max(0,noteT-dt);
     if(!over){
       cam+=(340+Math.min(120,cam/60))*dt; const wx=cam+CXS; inv=Math.max(0,inv-dt);
       vy+=4400*g*dt; const py=y, ny=y+vy*dt;
@@ -1140,9 +1140,9 @@ function gameChicken(done){
       else { for(const yt of BANDS){ const j=BANDS.indexOf(yt), yb=yt+BT; if(py>=yb-2&&ny<=yb&&solid(j,wx)){ ny2=yb; vy=0; break; } } }
       y=ny2;
       if(inv<=0) for(const o of obs){ const oy=o.side==='top'?BANDS[o.j]-OH:BANDS[o.j]+BT;
-        if(wx+CW/2-12>o.x && wx-CW/2+12<o.x+OW && y+CH-8>oy && y+8<oy+OH){ hits++; inv=1.4; vibrate([50,30,50]); break; } }
-      if(hits>=3) fin(30,'Курка не дотягнула… але ми її все одно любимо 🐥');
-      else if(wx>=LEN) fin(Math.max(40,150-hits*35),hits?`Курка добігла з ${hits} шишками 🐔`:'Курка добігла без жодної подряпини! 🏆');
+        if(wx+CW/2-12>o.x && wx-CW/2+12<o.x+OW && y+CH-8>oy && y+8<oy+OH){ hits++; inv=1.4; boom=.45; vibrate([50,30,50]); break; } }
+      if(hits>=3){ restarts++; hits=0; cam=0; y=BANDS[2]-CH; vy=0; g=1; inv=2; noteT=1.6; note='💥 Життя закінчились! Біжимо з початку'; vibrate([80,40,80]); }
+      else if(wx>=LEN) fin(Math.max(40,150-restarts*30),restarts?`Курка дісталась фінішу з ${restarts+1}-ї спроби! 🐔🏁`:'Курка добігла з першої спроби! 🏆');
     }
     /* sky */
     c.fillStyle='#ff80c1'; c.fillRect(0,0,SW,SH);
@@ -1153,14 +1153,14 @@ function gameChicken(done){
     /* bands */
     BANDS.forEach((by,j)=>{ const x0=-(cam%100);
       for(let x=x0-100;x<SW;x+=50){ const wxs=x+cam; if(!solid(j,wxs+25)) continue; tile(x,by,50,Math.round(wxs/50)); } });
-    /* бочки та ящики */
+    /* бомби */
     for(const o of obs){ const sx=o.x-cam; if(sx<-100||sx>SW+60) continue; const oy=o.side==='top'?BANDS[o.j]-OH:BANDS[o.j]+BT;
-      c.save(); c.lineJoin='round';
-      if(o.crate){ c.fillStyle='#e0a860'; c.strokeStyle='#8a5a2b'; c.lineWidth=5; rr(c,sx+2,oy+2,OW-4,OH-4,5); c.fill(); c.stroke();
-        c.beginPath(); c.moveTo(sx+8,oy+8); c.lineTo(sx+OW-8,oy+OH-8); c.moveTo(sx+OW-8,oy+8); c.lineTo(sx+8,oy+OH-8); c.stroke(); }
-      else { c.fillStyle='#b06a2c'; c.strokeStyle='#6e3d14'; c.lineWidth=5; c.beginPath(); c.ellipse(sx+OW/2,oy+OH/2,OW/2-1,OH/2-1,0,0,7); c.fill(); c.stroke();
-        c.strokeStyle='#5a5a66'; c.lineWidth=5; for(const dx of [-15,15]){ c.beginPath(); c.moveTo(sx+OW/2+dx,oy+4); c.lineTo(sx+OW/2+dx,oy+OH-4); c.stroke(); }
-        c.fillStyle='#ffffff40'; c.beginPath(); c.ellipse(sx+OW/2-8,oy+13,10,5,0,0,7); c.fill(); }
+      c.save(); c.translate(sx+OW/2,oy+OH/2); if(o.side==='bottom') c.scale(1,-1);
+      c.fillStyle='#24242e'; c.strokeStyle='#0e0e14'; c.lineWidth=4; c.beginPath(); c.ellipse(0,2,OW/2-1,OH/2-1,0,0,7); c.fill(); c.stroke();
+      c.fillStyle='#ffffff55'; c.beginPath(); c.ellipse(-10,-4,8,5,-.5,0,7); c.fill();
+      c.fillStyle='#55555f'; rr(c,-8,-OH/2-6,16,10,3); c.fill();
+      c.strokeStyle='#8a5a2b'; c.lineWidth=4; c.lineCap='round'; c.beginPath(); c.moveTo(0,-OH/2-4); c.quadraticCurveTo(10,-OH/2-16,18,-OH/2-12); c.stroke();
+      const sp=6+Math.sin(t*20+o.x)*3; c.fillStyle='#ffb21c'; c.beginPath(); for(let a=0;a<8;a++){ const r=a%2?sp*.5:sp; c.lineTo(20+r*Math.cos(a*Math.PI/4),-OH/2-13+r*Math.sin(a*Math.PI/4)); } c.closePath(); c.fill();
       c.restore(); }
     /* finish */
     const fx=LEN-cam+CXS; if(fx<SW+80){ for(let r=0;r<18;r++){ for(let k=0;k<2;k++){ c.fillStyle=((r+k)%2)?'#222':'#fff'; c.fillRect(fx+k*30,r*52,30,52); } } }
@@ -1169,6 +1169,8 @@ function gameChicken(done){
     /* hud */
     c.fillStyle='#ffffffcc'; rr(c,760,112,480,22,11); c.fill(); c.fillStyle='#ff3c8e'; rr(c,760,112,Math.max(22,480*Math.min(1,(cam+CXS)/LEN)),22,11); c.fill();
     stageText(c,'❤️'.repeat(3-hits)+'🖤'.repeat(hits),1000,170,52,'#fff','#a82d66');
+    if(boom>0){ const k=1-boom/.45; c.strokeStyle='#ffb21c'; c.lineWidth=14*(1-k); c.beginPath(); c.arc(CXS,y+CH/2,30+k*90,0,7); c.stroke(); stageText(c,'💥',CXS,y-20-k*30,70*(1-k*.3),'#fff'); }
+    if(noteT>0) stageText(c,note,1000,300,56,'#fff','#a82d66');
     drawCorners(c,press);
   });
   function drawChicken(c,x,y,g,pr){
@@ -1183,7 +1185,7 @@ function gameChicken(done){
     c.fillStyle='#222'; c.beginPath(); c.arc(16,-8,5,0,7); c.fill(); c.restore();
   }
 }
-gameChicken.intro=go=>introCard('🐔','Курка проти гравітації','Гра на весь екран (краще горизонтально). Курка біжить сама. Тап чи пробіл перевертає її вгору/вниз і дає оминути бочки та ящики. Є 3 життя, дістанься фінішу!',go);
+gameChicken.intro=go=>introCard('🐔','Курка проти гравітації','Гра на весь екран (краще горизонтально). Курка біжить сама. Тап чи пробіл перевертає її вгору/вниз і дає оминути бомби 💣. Є 3 життя, а якщо вони закінчились, біжиш з початку, поки не дістанешся фінішу!',go);
 
 /* ---------- 2) 🍣 Вежа з суші ---------- */
 function gameSushi(done){
