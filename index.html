@@ -103,7 +103,7 @@
   .game-box{position:relative;background:#fff;border:3px dashed var(--pink-300);border-radius:22px;padding:14px;margin-bottom:14px;text-align:center;user-select:none;-webkit-user-select:none;touch-action:manipulation}
   .meter{height:22px;background:var(--pink-100);border-radius:99px;overflow:hidden;margin:10px 0}
   .meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffb86b,var(--pink-500));transition:width .1s}
-  .cat{font-size:5rem;line-height:1.1;transition:transform .1s}
+  .cat{font-size:5rem;line-height:1.1;transition:transform .1s;min-height:180px;display:grid;place-items:center}
   .cat.bump{transform:scale(1.18) rotate(-5deg)}
   .timer{font-weight:700;font-size:1.3rem;color:var(--pink-500)}
   .sky{position:relative;height:300px;overflow:hidden;border-radius:16px;background:linear-gradient(#fff6fa,#ffe3ef)}
@@ -1021,9 +1021,8 @@ function stopGame(){ cleanups.forEach(f=>{try{f()}catch(e){}}); cleanups = []; }
 
 const catImg = i => el('img',{class:'catpng',src:`photos/cat/cat${i+1}.png`,alt:'кіт'});
 function reviveScreen(){
-  state.catIdx = state.deaths % 5; state.deaths++; saveGame();
   render(el('div',{class:'card center'},
-    catImg(state.catIdx),
+    el('span',{class:'big-emoji',text:'💔'}),
     el('h2',{text:'Серця закінчились!'}),
     el('p',{text:'Але ми так просто не здаємось. Нагодуй котика (мінімум 12 рибок), і ти повернешся в гру з одним сердечком 🐱'}),
     el('button',{class:'btn',text:'Реанімація! 🚑',onclick:()=>gameIntro(gameCat,true)})));
@@ -1037,9 +1036,9 @@ function gameIntro(run, revive){
       stopGame();
       if(revive){
         if(pts>=60){ state.lives=1; award('survivor'); confetti(60);
-          return render(el('div',{class:'card center'},catImg(state.catIdx),el('h2',{text:'Ти повернулась! +1 ❤️'}),el('p',{text:msg}),
+          return render(el('div',{class:'card center'},el('span',{class:'big-emoji',text:'❤️‍🩹'}),el('h2',{text:'Ти повернулась! +1 ❤️'}),el('p',{text:msg}),
             el('button',{class:'btn',text:'Продовжуємо ➡️',onclick:levelDone}))); }
-        return render(el('div',{class:'card center'},catImg(state.catIdx),el('h2',{text:'Котик ще голодний…'}),el('p',{text:msg}),
+        return render(el('div',{class:'card center'},el('span',{class:'big-emoji',text:'😿'}),el('h2',{text:'Котик ще голодний…'}),el('p',{text:msg}),
           el('button',{class:'btn',text:'Ще раз! 🔁',onclick:()=>gameIntro(gameCat,true)})));
       }
       state.score += pts; state.lastStars=pts>=100?3:pts>=50?2:1; if(pts>=100) confetti(40); vibrate(40);
@@ -1069,11 +1068,15 @@ function countdown(sec,onTick,onEnd){
 /* 1) Нагодуй котика */
 function gameCat(done){
   const GOAL=30; let n=0, over=false;
-  const cat=el('div',{class:'cat',text:'😿'}), m=el('i'), tm=el('div',{class:'timer'});
+  const catSrc = i => `photos/cat/cat${i+1}.png`;
+  for(let i=0;i<5;i++){ const pre=new Image(); pre.src=catSrc(i); }   // прогрів кеша
+  let stage=0;
+  const catPic=el('img',{class:'catpng',src:catSrc(0),alt:'кіт'}), cat=el('div',{class:'cat'},catPic), m=el('i'), tm=el('div',{class:'timer'});
   const press=()=>{
     if(over) return; n++;
     m.style.width=Math.min(100,n/GOAL*100)+'%';
-    cat.textContent = n<GOAL/3?'😿':n<GOAL*2/3?'😺':'😻';
+    const ns=Math.min(4,Math.floor(n/GOAL*5));
+    if(ns!==stage){ stage=ns; catPic.src=catSrc(stage); }
     cat.classList.add('bump'); setTimeout(()=>cat.classList.remove('bump'),80);
     vibrate(8);
     if(n>=GOAL){ award('cat'); end(); }
