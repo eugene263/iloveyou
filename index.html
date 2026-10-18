@@ -613,6 +613,8 @@ const WORLD = [
     levels:["w1","w2","g:chicken","w3","w4","q15","g:sushi","w5","q16","boss"] }
 ];
 const LOC_BONUS = 200;
+/* 🔓 Режим тестування: true = будь-яка локація відкрита й можна переграти пройдену. ПЕРЕД ПОДАРУНКОМ постав false! */
+const DEV_UNLOCK_ALL = true;
 const GAME_BY = { cat:()=>gameCat, chicken:()=>gameChicken, hearts:()=>gameHearts, sushi:()=>gameSushi, kiss:()=>gameKiss, paws:()=>gamePaws, memory:()=>gameMemory, wheel:()=>gameWheel };
 
 /* ---- збереження ---- */
@@ -623,7 +625,7 @@ function applySave(d){ Object.assign(state,{name:d.name||HER_NAME_FALLBACK,_s:d.
 function resetState(){ Object.assign(state,{lvl:new Set(),shown:0,_s:0,streak:0,bestStreak:0,hints:3,log:[],lives:3,ach:new Set(),dodges:0,done:{},loc:0,lv:0,lastStars:1}); }
 
 const locProgress = li => WORLD[li].levels.filter((_,k)=>state.done[li+'-'+k]).length;
-const locUnlocked = li => li===0 || locProgress(li-1)===WORLD[li-1].levels.length;
+const locUnlocked = li => DEV_UNLOCK_ALL || li===0 || locProgress(li-1)===WORLD[li-1].levels.length;
 const lvlUnlocked = (li,k) => locUnlocked(li) && (k===0 || !!state.done[li+'-'+(k-1)]);
 const svgEl = (tag,attrs) => { const n=document.createElementNS('http://www.w3.org/2000/svg',tag); for(const k in attrs) n.setAttribute(k,attrs[k]); return n; };
 const starsText = n => '⭐'.repeat(n)+'☆'.repeat(3-n);
@@ -759,7 +761,7 @@ function toast(m){ const n=el('div',{class:'toast',text:m}); document.body.appen
 
 function enterLocation(li){
   const L=WORLD[li], n=L.levels.length, prog=locProgress(li);
-  if(prog>=n){ toast(`Локацію «${L.name}» вже пройдено ✅`); return; }
+  if(prog>=n){ if(DEV_UNLOCK_ALL){ startLevel(li,0); return; } toast(`Локацію «${L.name}» вже пройдено ✅`); return; }
   const k=L.levels.findIndex((_,j)=>!state.done[li+'-'+j]);
   startLevel(li,k<0?0:k);
 }
@@ -772,16 +774,16 @@ function startLevel(li,k){
 }
 function levelDone(){
   stopGame();
-  const li=state.loc,k=state.lv,key=li+'-'+k;
+  const li=state.loc,k=state.lv,key=li+'-'+k, wasFull=locProgress(li)===WORLD[li].levels.length;
   state.done[key]=Math.max(state.done[key]||0,state.lastStars||1);
   saveGame();
   if(WORLD[li].levels[k]==='boss') return resultScreen();
-  if(locProgress(li)===WORLD[li].levels.length) return locationComplete(li);
+  if(k>=WORLD[li].levels.length-1) return locationComplete(li,wasFull);
   startLevel(li,k+1);
 }
-function locationComplete(li){
+function locationComplete(li,wasFull){
   const L=WORLD[li], next=WORLD[li+1];
-  state.lives=3; state.score+=LOC_BONUS; confetti(110); vibrate([40,30,40,30,80]); saveGame();
+  state.lives=3; if(!wasFull) state.score+=LOC_BONUS; confetti(110); vibrate([40,30,40,30,80]); saveGame();
   render(el('div',{class:'card center'},
     el('span',{class:'big-emoji',text:'🏁'}),
     el('h2',{text:`Локацію «${L.name}» пройдено!`}),
