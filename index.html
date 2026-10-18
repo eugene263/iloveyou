@@ -1616,10 +1616,16 @@ function gameChicken(done){
   const gaps=[], obs=[], OW=50, OH=44;
   for(let j=1;j<=4;j++){ let x=1200+Math.random()*500; while(x<LEN){ gaps.push({j,x,w:210}); x+=800+Math.random()*700; } }
   const solid=(j,wx)=> j===0||j===5 || !gaps.some(g=>g.j===j&&wx>g.x+6&&wx<g.x+g.w-6);
-  /* бочки й ящики: стоять на платформі (top) або висять під нею (bottom) */
-  for(let x=1800;x<LEN-700;x+=560+Math.random()*320){ const j=Math.floor(Math.random()*6);
-    const side=j===0?'bottom':j===5?'top':(Math.random()<.5?'top':'bottom');
-    if(solid(j,x)&&solid(j,x+OW)) obs.push({j,x,side,crate:Math.random()<.5}); }
+  /* бомби: лежать на платформі (top) або висять під нею (bottom). Їх БАГАТО: на кожній смузі проходу
+     (між двома платформами) тримаємо відстані, щоб завжди можна було перевернутись і пролетіти */
+  const laneB=[[],[],[],[],[]], SAME=210, OPP=300;
+  for(let x=1500;x<LEN-450;x+=55+Math.random()*70){
+    const j=Math.floor(Math.random()*6), side=j===0?'bottom':j===5?'top':(Math.random()<.5?'top':'bottom');
+    const bx=x+Math.random()*40, lane=side==='top'?j-1:j;
+    if(!(solid(j,bx)&&solid(j,bx+OW))) continue;
+    if(laneB[lane].some(o=>Math.abs(o.x-bx)<(o.side===side?SAME:OPP))) continue;
+    laneB[lane].push({x:bx,side}); obs.push({j,x:bx,side});
+  }
   let cam=0,y=BANDS[2]-CH,vy=0,g=1,hits=0,inv=0,over=false,t=0,press=0,restarts=0,boom=0,note='',noteT=0;
   const flip=()=>{ if(over) return; g=-g; vy=g*260; press=1; vibrate(8); };
   let ended=false; const fin=(pts,msg)=>{ if(ended) return; ended=true; over=true; stop(); later(()=>{ st.close(); done(pts,msg); },pts?500:0); };
