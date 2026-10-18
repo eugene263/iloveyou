@@ -245,6 +245,8 @@
   .dmark.rev{border-color:#ff9f1c}.dmark.hint{border-color:#f0509a;animation:pulse .6s infinite}
   .dmiss{position:absolute;transform:translate(-50%,-50%);font-size:1.6rem;pointer-events:none;animation:fadeout .7s forwards}
   @keyframes fadeout{to{opacity:0;transform:translate(-50%,-90%)}}
+.catpng{display:block;margin:0 auto 12px;max-height:190px;max-width:75%;width:auto;height:auto;object-fit:contain;
+    filter:drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff) drop-shadow(0 10px 10px #f0509a55);animation:bob 2.4s ease-in-out infinite}
 </style>
 </head>
 <body>
@@ -529,7 +531,7 @@ const RANKS = [
 
 /* ===================================================================== */
 const $app = document.getElementById('app');
-const state = { name:"", i:0, loc:0, lv:0, done:{}, lastStars:1, _s:0, lvl:new Set(), shown:0, get score(){return this._s}, set score(v){ this._s=v; checkLevels(); }, streak:0, bestStreak:0, hints:3, log:[], answered:false, lives:3, ach:new Set(), dodges:0 };
+const state = { name:"", i:0, deaths:0, catIdx:0, loc:0, lv:0, done:{}, lastStars:1, _s:0, lvl:new Set(), shown:0, get score(){return this._s}, set score(v){ this._s=v; checkLevels(); }, streak:0, bestStreak:0, hints:3, log:[], answered:false, lives:3, ach:new Set(), dodges:0 };
 const POINTS = 100, STREAK_BONUS = 25;
 
 /* helpers */
@@ -633,10 +635,10 @@ const GAME_BY = { cat:()=>gameCat, chicken:()=>gameChicken, hearts:()=>gameHeart
 
 /* ---- збереження ---- */
 const SAVE_KEY='iloveyou-save-v1';
-function saveGame(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify({name:state.name,score:state._s,lives:state.lives,hints:state.hints,streak:state.streak,bestStreak:state.bestStreak,lvl:[...state.lvl],ach:[...state.ach],done:state.done,log:state.log,dodges:state.dodges})); }catch(e){} }
+function saveGame(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify({name:state.name,score:state._s,lives:state.lives,hints:state.hints,streak:state.streak,bestStreak:state.bestStreak,lvl:[...state.lvl],ach:[...state.ach],done:state.done,log:state.log,dodges:state.dodges,deaths:state.deaths})); }catch(e){} }
 function loadGame(){ try{ const d=JSON.parse(localStorage.getItem(SAVE_KEY)); return d&&d.done?d:null; }catch(e){ return null; } }
-function applySave(d){ Object.assign(state,{name:HER_NAME_FALLBACK,_s:d.score||0,shown:d.score||0,lives:d.lives??3,hints:d.hints??3,streak:d.streak||0,bestStreak:d.bestStreak||0,lvl:new Set(d.lvl||[]),ach:new Set(d.ach||[]),done:d.done||{},log:d.log||[],dodges:d.dodges||0}); }
-function resetState(){ Object.assign(state,{lvl:new Set(),shown:0,_s:0,streak:0,bestStreak:0,hints:3,log:[],lives:3,ach:new Set(),dodges:0,done:{},loc:0,lv:0,lastStars:1}); }
+function applySave(d){ Object.assign(state,{name:HER_NAME_FALLBACK,_s:d.score||0,shown:d.score||0,lives:d.lives??3,hints:d.hints??3,streak:d.streak||0,bestStreak:d.bestStreak||0,lvl:new Set(d.lvl||[]),ach:new Set(d.ach||[]),done:d.done||{},log:d.log||[],dodges:d.dodges||0,deaths:d.deaths||0}); }
+function resetState(){ Object.assign(state,{lvl:new Set(),shown:0,_s:0,streak:0,bestStreak:0,hints:3,log:[],lives:3,ach:new Set(),dodges:0,deaths:0,done:{},loc:0,lv:0,lastStars:1}); }
 
 const locProgress = li => WORLD[li].levels.filter((_,k)=>state.done[li+'-'+k]).length;
 const locUnlocked = li => DEV_UNLOCK_ALL || li===0 || locProgress(li-1)===WORLD[li-1].levels.length;
@@ -1017,9 +1019,11 @@ let cleanups = [];
 const onCleanup = f => cleanups.push(f);
 function stopGame(){ cleanups.forEach(f=>{try{f()}catch(e){}}); cleanups = []; }
 
+const catImg = i => el('img',{class:'catpng',src:`photos/cat/cat${i+1}.png`,alt:'кіт'});
 function reviveScreen(){
+  state.catIdx = state.deaths % 5; state.deaths++; saveGame();
   render(el('div',{class:'card center'},
-    el('span',{class:'big-emoji',text:'💔'}),
+    catImg(state.catIdx),
     el('h2',{text:'Серця закінчились!'}),
     el('p',{text:'Але ми так просто не здаємось. Нагодуй котика (мінімум 12 рибок), і ти повернешся в гру з одним сердечком 🐱'}),
     el('button',{class:'btn',text:'Реанімація! 🚑',onclick:()=>gameIntro(gameCat,true)})));
@@ -1033,9 +1037,9 @@ function gameIntro(run, revive){
       stopGame();
       if(revive){
         if(pts>=60){ state.lives=1; award('survivor'); confetti(60);
-          return render(el('div',{class:'card center'},el('span',{class:'big-emoji',text:'❤️‍🩹'}),el('h2',{text:'Ти повернулась! +1 ❤️'}),el('p',{text:msg}),
+          return render(el('div',{class:'card center'},catImg(state.catIdx),el('h2',{text:'Ти повернулась! +1 ❤️'}),el('p',{text:msg}),
             el('button',{class:'btn',text:'Продовжуємо ➡️',onclick:levelDone}))); }
-        return render(el('div',{class:'card center'},el('span',{class:'big-emoji',text:'😿'}),el('h2',{text:'Котик ще голодний…'}),el('p',{text:msg}),
+        return render(el('div',{class:'card center'},catImg(state.catIdx),el('h2',{text:'Котик ще голодний…'}),el('p',{text:msg}),
           el('button',{class:'btn',text:'Ще раз! 🔁',onclick:()=>gameIntro(gameCat,true)})));
       }
       state.score += pts; state.lastStars=pts>=100?3:pts>=50?2:1; if(pts>=100) confetti(40); vibrate(40);
