@@ -1047,7 +1047,9 @@ function ticketScreen(){
   render(el('div',{class:'card center'},
     el('p',{text:'Подряпай, щоб відкрити сюрприз 👇'}), box,
     el('button',{class:'btn ghost',text:'⬅️ Назад до результатів',onclick:resultScreen})));
-  requestAnimationFrame(()=>scratchify(box,()=>{confetti(100);vibrate([40,30,40]);}));
+  const go=()=>requestAnimationFrame(()=>scratchify(box,()=>{confetti(100);vibrate([40,30,40]);}));
+  const im=box.querySelector('img');
+  if(im&&!im.complete){ let f=false; const run=()=>{ if(!f){ f=true; go(); } }; im.addEventListener('load',run); im.addEventListener('error',run); } else go();
 }
 function resultScreen(){
   const correctCount = state.log.filter(l=>l.right).length;
