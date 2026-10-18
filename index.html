@@ -284,6 +284,7 @@
   .gprize h2{color:#fff;margin:6px 0 8px;font-size:1.4rem}
   .gprize p{color:#fff;font-size:1.15rem;font-weight:600;margin:0}
   .gbtn{max-width:320px;opacity:0;animation:gshow .4s 2.2s forwards;position:relative;z-index:2}
+.opt.multi{display:flex;gap:12px;align-items:center}.opt.multi .chk{font-size:1.3rem;color:var(--pink-500)}.opt.sel{border-color:var(--pink-400);background:#fff0f6}.opt.missed{border-color:#ff9f1c;background:#fff4e0}
 </style>
 </head>
 <body>
@@ -349,9 +350,15 @@ const QUESTIONS = [
     ok:"Правильно!", no:"Не всі відповіді збіглися." },
 
   /* 9. Ввести відповідь */
-  { id:"q9", emoji:"📱", q:"Як я записаний(а) у твоєму телефоні?",
-    options:["[Як записаний у неї]","Не відповідати!!!","Мій найкращий WiFi","Доставка щастя"],
-    ok:"Все вірно.", no:"Ні, перевір контакти." },
+  { id:"q9", type:"multi", emoji:"🍔", q:"Що я зазвичай замовляю в МакДональдз? (обери кілька варіантів)",
+    items:[
+      { t:"Найс прайс комбо: чізбургер і кола", a:true },
+      { t:"Найс прайс комбо: фрі і нагетси", a:true },
+      { t:"Даббл чізбургер", a:false },
+      { t:"Макфлурі", a:false },
+      { t:"Макмафін", a:false }
+    ],
+    ok:"Все вірно.", no:"Не всі відповіді збіглися." },
 
   /* 10. Заповни пропуски: {0},{1} — місця, blanks[i].answer — правильне слово */
   { id:"q10", type:"text", emoji:"🌲⛰️🏊🎡🍄🏨🎂", q:"Яке місце зашифровано цими емодзі?",
@@ -1486,6 +1493,25 @@ function diffScreen(Q){
   shell(Q, el('p',{class:'center',style:'font-size:.9rem',text:`Знайди ${N} відмінностей між двома фото. Тапай по місцю різниці на будь-якому з них.`}), info, wA, wB, hintBtn, giveBtn, fb);
 }
 TYPES.diff=diffScreen;
+/* --- ☑️ вибір кількох відповідей: Q.items=[{t:"…", a:true|false}] --- */
+function multiScreen(Q){
+  state.answered=false; const fb=el('div'), items=shuffle(Q.items), sel=new Set();
+  const btns=items.map((it,i)=>{ const b=el('button',{class:'opt multi'},el('span',{class:'chk',text:'☐'}),el('span',{text:it.t}));
+    b.addEventListener('click',()=>{ if(state.answered) return; if(sel.has(i)){ sel.delete(i); b.classList.remove('sel'); b.firstChild.textContent='☐'; } else { sel.add(i); b.classList.add('sel'); b.firstChild.textContent='☑'; } vibrate(8); });
+    return b; });
+  const check=el('button',{class:'btn',text:'Перевірити ✅'});
+  check.addEventListener('click',()=>{
+    if(state.answered) return; check.remove();
+    const need=Q.items.filter(x=>x.a).length; let hits=0, wrong=0;
+    items.forEach((it,i)=>{ const b=btns[i], on=sel.has(i); b.disabled=true;
+      if(it.a&&on){ hits++; b.classList.add('correct'); } else if(it.a&&!on){ b.classList.add('missed'); } else if(!it.a&&on){ wrong++; b.classList.add('wrong'); } });
+    const ratio=Math.max(0,(hits-wrong)/need);
+    resolve(Q,ratio,fb,{answer:Q.items.filter(x=>x.a).map(x=>x.t).join('; '),detail:`Вірних ${hits} з ${need}${wrong?`, зайвих ${wrong}`:''}`});
+  });
+  shell(Q, el('p',{class:'center',style:'font-size:.9rem',text:'Можна обрати кілька варіантів. Познач усі вірні й натисни «Перевірити».'}), ...btns, check, fb);
+}
+TYPES.multi=multiScreen;
+
 
 /* --- 🔦 прожектор: фото закрите темрявою, відкривається пальцем ---
    Q.image — фото; Q.options — варіанти (перший правильний); чим менше відкрито, тим більше очок */
