@@ -690,12 +690,12 @@ const WORLD = [
   { name:"Подорожі та мрії", emoji:"✈️", color:"#7ad0ff", text:"Куди ми вже їздили й куди мрієм",
     levels:["q18","n9","g:chicken","n10","n11","g:hearts","n12","n13","q17","g:sushi"] },
   { name:"Наші перемоги й рекорди", emoji:"🏆", color:"#c9a0ff", text:"Досягнення, рекорди й найсмішніші моменти",
-    levels:["w1","w2","g:chicken","w3","w4","q15","g:sushi","w5","q16","boss"] }
+    levels:["w1","w2","g:chicken","w3","w4","q15","g:whack","w5","q16","boss"] }
 ];
 const LOC_BONUS = 200;
 /* 🔓 Режим тестування: true = будь-яка локація відкрита й можна переграти пройдену. ПЕРЕД ПОДАРУНКОМ постав false! */
 const DEV_UNLOCK_ALL = true;
-const GAME_BY = { findcat:()=>gameFindCat, laser:()=>gameLaser, cat:()=>gameCat, chicken:()=>gameChicken, hearts:()=>gameHearts, sushi:()=>gameSushi, kiss:()=>gameKiss, paws:()=>gamePaws, memory:()=>gameMemory, wheel:()=>gameWheel };
+const GAME_BY = { findcat:()=>gameFindCat, laser:()=>gameLaser, cat:()=>gameCat, chicken:()=>gameChicken, hearts:()=>gameHearts, sushi:()=>gameSushi, kiss:()=>gameKiss, paws:()=>gamePaws, memory:()=>gameMemory, whack:()=>gameWhack, wheel:()=>gameWheel };
 
 /* ---- збереження ---- */
 const SAVE_KEY='iloveyou-save-v1';
@@ -1236,6 +1236,41 @@ function gameKiss(done){
     el('button',{class:'btn',text:'💋 ЧМОК!',onclick:stop}));
 }
 gameKiss.intro = go => introCard('💋','Ідеальний поцілунок','Маркер бігає туди-сюди. Зупини його точно в зеленій зоні. Три спроби, і з кожною все складніше!',go);
+
+/* Рекордна лунка — лупи крота, не чіпай бомби */
+function gameWhack(done){
+  let n=0, over=false, up=new Set();
+  const sc=el('div',{class:'timer',text:'🎯 0'}), tm=el('div',{class:'timer'});
+  const grid=el('div',{style:'display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:300px;margin:10px auto'});
+  const holes=[];
+  for(let i=0;i<9;i++){
+    const h=el('button',{style:'font-size:2.4rem;height:84px;border-radius:50%;border:3px solid #f3b6cf;background:#ffe4ef;cursor:pointer;touch-action:manipulation',text:''});
+    h.addEventListener('pointerdown',e=>{
+      e.preventDefault(); if(over||!h.dataset.k) return;
+      const bad=h.dataset.k==='bad'; h.dataset.k=''; up.delete(i);
+      n+=bad?-2:1; if(n<0) n=0; sc.textContent='🎯 '+n; h.textContent=bad?'💥':'✨'; vibrate(bad?[30,20,30]:10);
+      setTimeout(()=>{ h.textContent=''; },250);
+    });
+    holes.push(h); grid.append(h);
+  }
+  const pop=()=>{
+    if(over) return;
+    const free=holes.map((_,i)=>i).filter(i=>!up.has(i)); if(!free.length) return;
+    const i=pick(free), h=holes[i], bad=Math.random()<.22;
+    up.add(i); h.dataset.k=bad?'bad':'ok'; h.textContent=bad?'💣':'🐹';
+    setTimeout(()=>{ if(h.dataset.k){ h.dataset.k=''; h.textContent=''; up.delete(i); } },750+Math.random()*350);
+  };
+  const id=setInterval(pop,430); onCleanup(()=>clearInterval(id));
+  function end(){
+    if(over) return; over=true;
+    done(Math.min(150,n*10), n>=12?'Рекорд! Реакція на висоті.':n>=7?'Добре, але рекорд ще попереду.':'Повільно, спробуй ще раз.');
+  }
+  playCard('Рекордна лунка',
+    el('p',{text:'Тапай по 🐹, що вистрибують з лунок. 💣 не чіпай: вона віднімає очки!'}),
+    el('div',{class:'game-box'},sc,tm,grid));
+  countdown(15,t=>tm.textContent=`⏱ ${t}`,end);
+}
+gameWhack.intro = go => introCard('🔨','Рекордна лунка','З лунок вистрибують кроти. Тапай по них якнайшвидше, а бомби (💣) не чіпай. Час: 15 секунд.',go);
 
 /* 4) Мемо-карточки */
 function gameMemory(done){
