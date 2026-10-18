@@ -566,7 +566,7 @@ const LEVELS = [
 ];
 
 /* Фінальний бос — runaway-кнопка (не змінювати без потреби) */
-const BOSS = { emoji:"👑", q:"ФІНАЛЬНЕ ПИТАННЯ: чи любиш ти мене?" };
+const BOSS = { emoji:"👑", q:"ФІНАЛЬНЕ ПИТАННЯ: ти приймеш головний приз?" };
 
 /* Звання за результатом (поріг у відсотках) */
 const RANKS = [
@@ -1003,10 +1003,10 @@ function questionScreen(Q){
 
 function bossScreen(){
   const arena = el('div',{class:'arena'});
-  const yes = el('button',{class:'btn',id:'yes',text:'Так 💖'});
+  const yes = el('button',{class:'btn',id:'yes',text:'Так 🎁'});
   const no  = el('button',{class:'btn',id:'no',text:'Ні'});
   let dodges = 0, scale = 1;
-  const noTexts = ['Ні','Ти впевнена?','Подумай ще!','Точно ні?','Не тисни!','Ну будь ласка 🥺','Я ж плакати буду','Ок, ні… 😭'];
+  const noTexts = ['Ні','Ти впевнена?','Подумай ще!','Точно ні?','Не тисни!','Може, все ж так?','Приз же хороший','Ок, ні…'];
   const flee = e => {
     if(e) e.preventDefault();
     dodges++; state.dodges=dodges; if(dodges>=8) award('boss'); scale = Math.min(scale+0.18, 2.2);
@@ -1022,7 +1022,7 @@ function bossScreen(){
   no.addEventListener('touchstart',flee,{passive:false});
   no.addEventListener('click',flee);
   yes.addEventListener('click',()=>{
-    state.score += 500; state.streak++; state.log.push({q:BOSS.q,right:true,answer:'Так 💖'});
+    state.score += 500; state.streak++; state.log.push({q:BOSS.q,right:true,answer:'Так 🎁'});
     state.lastStars=3; confetti(120); vibrate([40,30,40,30,80]); levelDone();
   });
   arena.append(yes,no);
