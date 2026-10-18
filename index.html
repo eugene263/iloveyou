@@ -255,7 +255,7 @@
    - no     : що написати, якщо помилилась
    Зараз правильні відповіді — заглушки, їх треба замінити на справжні!
    ===================================================================== */
-const HER_NAME_FALLBACK = "красуня";
+const HER_NAME_FALLBACK = "Мімімо";
 
 const QUESTIONS = [
   /* Типи: (без type) = вибір відповіді | who | pixel | map | text | order | slider | swipe | fill
@@ -620,7 +620,7 @@ const GAME_BY = { cat:()=>gameCat, chicken:()=>gameChicken, hearts:()=>gameHeart
 const SAVE_KEY='iloveyou-save-v1';
 function saveGame(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify({name:state.name,score:state._s,lives:state.lives,hints:state.hints,streak:state.streak,bestStreak:state.bestStreak,lvl:[...state.lvl],ach:[...state.ach],done:state.done,log:state.log,dodges:state.dodges})); }catch(e){} }
 function loadGame(){ try{ const d=JSON.parse(localStorage.getItem(SAVE_KEY)); return d&&d.done?d:null; }catch(e){ return null; } }
-function applySave(d){ Object.assign(state,{name:d.name||HER_NAME_FALLBACK,_s:d.score||0,shown:d.score||0,lives:d.lives??3,hints:d.hints??3,streak:d.streak||0,bestStreak:d.bestStreak||0,lvl:new Set(d.lvl||[]),ach:new Set(d.ach||[]),done:d.done||{},log:d.log||[],dodges:d.dodges||0}); }
+function applySave(d){ Object.assign(state,{name:HER_NAME_FALLBACK,_s:d.score||0,shown:d.score||0,lives:d.lives??3,hints:d.hints??3,streak:d.streak||0,bestStreak:d.bestStreak||0,lvl:new Set(d.lvl||[]),ach:new Set(d.ach||[]),done:d.done||{},log:d.log||[],dodges:d.dodges||0}); }
 function resetState(){ Object.assign(state,{lvl:new Set(),shown:0,_s:0,streak:0,bestStreak:0,hints:3,log:[],lives:3,ach:new Set(),dodges:0,done:{},loc:0,lv:0,lastStars:1}); }
 
 const locProgress = li => WORLD[li].levels.filter((_,k)=>state.done[li+'-'+k]).length;
@@ -794,15 +794,12 @@ function locationComplete(li,wasFull){
 /* ---------- screens ---------- */
 function startScreen(){
   const save=loadGame();
-  const input = el('input',{type:'text',placeholder:"Як тебе звати, сонечко?",maxlength:"24",autocomplete:"off"});
-  const go = () => { state.name = input.value.trim() || HER_NAME_FALLBACK; resetState(); introScreen(); };
-  input.addEventListener('keydown',e=>{ if(e.key==='Enter') go(); });
+  const go = () => { state.name = HER_NAME_FALLBACK; resetState(); introScreen(); };
   render(el('div',{class:'card'},
     el('span',{class:'big-emoji',text:'💘'}),
     el('h1',{text:'Наскільки ти знаєш нас?'}),
     el('p',{class:'center',text:'Гра-подорож для однієї дуже особливої людини: 5 локацій, по 10 рівнів у кожній. Призи — солодкі. Образи — не приймаються 😌'}),
-    save ? el('button',{class:'btn',style:'margin-bottom:16px',text:`▶️ Продовжити (${save.name}, ⭐ ${save.score})`,onclick:()=>{ applySave(save); worldMap(); }}) : '',
-    input,
+    save ? el('button',{class:'btn',style:'margin-bottom:16px',text:`▶️ Продовжити (⭐ ${save.score})`,onclick:()=>{ applySave(save); worldMap(); }}) : '',
     el('button',{class:save?'btn ghost':'btn',text:save?'Почати нову гру 🎮':'Почати гру 🎮',onclick:go})
   ));
 }
