@@ -289,21 +289,8 @@ const QUESTIONS = [
     ok:"Так, це був я.", no:"Цього разу не вгадала, але йдемо далі 😉" },
 
   /* 3. Піксельне фото: підстав image:"photos/date.jpg", перший варіант — правильний */
-  { id:"q3", type:"pixel", emoji:"☕", q:"Куди ми пішли на перше побачення? (фото поступово проявляється)",
-    options:["[Справжнє місце побачення]","На парковку, дивитись на машини","У музей старих утюгів","На ринок за картоплею"],
-    ok:"Правильно!", no:"Не вгадала." },
-
   /* 4. Карта: target — правильна точка у %, radius — похибка; image:"photos/map.jpg" — своя карта */
-  { id:"q4", type:"map", emoji:"💋", q:"Тапни на схемі: де ми вперше поцілувались?",
-    target:{x:62,y:42}, radius:12, answerText:"[місце першого поцілунку]",
-    ok:"Правильно!", no:"Не вгадала, це було інше місце." },
-
   /* 5. Ввести відповідь: accept — всі прийнятні варіанти */
-  { id:"q5", type:"slider", emoji:"🍕", q:"Наскільки я люблю те, що ми їли на першій вечері? (±10)",
-    tolerance:10,
-    items:[ { emoji:"🍣", label:"Суші", answer:70 }, { emoji:"🍝", label:"Пасту", answer:85 }, { emoji:"🍰", label:"Десерт", answer:95 } ],
-    ok:"Точно, пам'ятаєш добре.", no:"Цього разу мимо." },
-
   /* 6. Розклади по порядку: items у ПРАВИЛЬНОМУ порядку */
   { id:"q6", type:"order", emoji:"📅", q:"Розклади події нашої історії по порядку",
     items:["👋 Познайомились","☕ Перше побачення","💋 Перший поцілунок","💞 Стали парою","✈️ Перша спільна подорож"],
@@ -392,32 +379,12 @@ const QUESTIONS = [
 
   { id:"n3", type:"swipe", emoji:"🧐", q:"Правда чи міф про наше знайомство?",
     cards:[
-      { t:"Ми познайомились узимку", a:true },
-      { t:"Я з першого погляду закохався", a:false },
+      { t:"Ми познайомились біля води", a:true },
+      { t:"Наше знайомство відбулось у кав'ярні", a:false },
       { t:"Ти першою мене помітила", a:true },
-      { t:"Ми обмінялись номерами в перший день", a:false }
+      { t:"Ми обмінялись номерами в перший день", a:true }
     ],
     ok:"Все правильно.", no:"Не всі відповіді збіглися." },
-
-  { id:"n4", type:"slider", emoji:"👗", q:"Наскільки мені подобається на тобі…? (±10)",
-    tolerance:10,
-    items:[ { emoji:"👗", label:"Сукня", answer:90 }, { emoji:"👖", label:"Джинси", answer:70 }, { emoji:"🧸", label:"Затишна піжама", answer:100 } ],
-    ok:"Точно.", no:"Не зовсім." },
-
-  { id:"n5", type:"slider", emoji:"😰", q:"Наскільки я нервував(ла) на першому побаченні? (±10)",
-    tolerance:10,
-    items:[ { emoji:"😰", label:"Нервозність", answer:75 }, { emoji:"😍", label:"Захоплення", answer:90 } ],
-    ok:"Близько до правди.", no:"Не зовсім." },
-
-  { id:"n6", type:"who", emoji:"💌", q:"Хто з нас першим сказав «я тебе кохаю»?",
-    answer:"me",
-    ok:"Так, це я.", no:"Ні, це було інакше." },
-
-  { id:"n7", type:"fill", emoji:"☕", q:"Перше побачення",
-    text:"На першому побаченні ми пили {0} і розмовляли про {1}.",
-    blanks:[ {options:["[Напій]","сік","компот","воду з-під крану"],answer:"[Напій]"},
-             {options:["[Тема]","погоду","квантову фізику","податки"],answer:"[Тема]"} ],
-    ok:"Правильно!", no:"Не вгадала." },
 
   { id:"n8", type:"slider", emoji:"🎚️", q:"Наскільки сильно я люблю…? (±10)",
     tolerance:10,
@@ -457,6 +424,42 @@ const QUESTIONS = [
     hint:"Розстав варіанти стрілками ▲▼ від найбільшої мрії до найменшої",
     items:["🏖️ Італія на море","🌊 Португалія (океан)","🏰 Франція (Діснейленд)","🐪 Єгипет (на місяць у січні)","⛰️ Грузія в гори (курорт)"],
     ok:"Порядок збігається.", no:"Порядок інший." },
+
+/* ====== Локація «Моніплод» (наш кіт). Відповіді в заглушках — заміни на свої ====== */
+  { id:"m1", emoji:"🐱", q:"Як звати нашого кота?",
+    options:["Моніплод","Барсік","Мурзік","Пончик"],
+    ok:"Правильно!", no:"Не вгадала." },
+
+  { id:"m2", type:"slider", emoji:"🐾", q:"Наскільки Моніплод любить…? (±10)",
+    tolerance:10,
+    items:[ { emoji:"🍗", label:"Їжу", answer:100 }, { emoji:"😴", label:"Спати", answer:95 }, { emoji:"🧶", label:"Гратися", answer:60 } ],
+    ok:"Ти знаєш його добре.", no:"Є ще чому повчитись." },
+
+  { id:"m3", type:"swipe", emoji:"🐈", q:"Правда чи міф про Моніплода?",
+    cards:[
+      { t:"Моніплод любить спати на дивані", a:true },
+      { t:"Він боїться пилососа", a:false },
+      { t:"Він прокидається першим у нашому домі", a:true },
+      { t:"Він їсть усе, що знайде", a:false }
+    ],
+    ok:"Все вірно.", no:"Не всі відповіді збіглися." },
+
+  { id:"m4", type:"pixel", emoji:"😴", q:"Що робить Моніплод на фото? (фото поступово проявляється)",
+    image:"photos/moniplod_sleep.jpg",
+    options:["Спить","Їсть","Грається","Дивиться у вікно"],
+    ok:"Правильно!", no:"Не вгадала." },
+
+  { id:"m5", type:"who", emoji:"🍗", q:"Хто з нас частіше годує Моніплода?",
+    answer:"me",
+    ok:"Так, це зазвичай я.", no:"Ні, це не так." },
+
+  { id:"m6", type:"order", emoji:"🗓️", q:"Розклади день Моніплода по порядку",
+    items:["😴 Прокинувся","🍗 Поїв","🧶 Погрався","🪟 Подивився у вікно","😴 Заснув"],
+    ok:"Порядок вірний.", no:"Порядок не збігається." },
+
+  { id:"m7", emoji:"😺", photo:"photos/moniplod_yawn.jpg", q:"Що Моніплод робить на цьому фото?",
+    options:["Позіхає","Співає","Чхає","Гнівається"],
+    ok:"Правильно!", no:"Не вгадала." },
 
   /* ====== Локація «Наші перемоги й рекорди» ====== */
   { id:"w1", emoji:"🍳", q:"Яке наше найдовше готування їжі?",
@@ -626,8 +629,8 @@ function confetti(n=70){
 const WORLD = [
   { name:"Знайомство",       emoji:"👀", color:"#ff9ec7", text:"Де й як усе почалось…",
     levels:["q1","q2","g:cat","q10","n1","g:hearts","n2","n3","q6","g:memory"] },
-  { name:"Перші побачення",  emoji:"☕", color:"#ffb36b", text:"Метелики в животі й романтика",
-    levels:["q3","q4","g:chicken","q5","n4","g:kiss","n5","n6","n7","g:paws"] },
+  { name:"Моніплод", emoji:"🐱", color:"#ffb36b", text:"Наш кіт",
+    levels:["m1","m2","g:cat","m3","m4","m5","g:paws","m6","m7","g:chicken"] },
   { name:"Смаки та звички",  emoji:"🍕", color:"#ffd166", text:"Що ми любимо (і що нас бісить)",
     levels:["q7","q8","g:sushi","q9","q11","g:wheel","q12","n8","q13","g:paws"] },
   { name:"Подорожі та мрії", emoji:"✈️", color:"#7ad0ff", text:"Куди ми вже їздили й куди мрієм",
@@ -694,13 +697,12 @@ const LANDMARKS=[
       c.fillStyle='#8a5a2b'; c.fillRect(x+dx+w/2-11,b-34,22,34); c.fillStyle='#bfe8ff'; c.fillRect(x+dx+10,b-h+14,20,20); }
     tree(c,x+150,b+6,1.1); c.fillStyle='#a0693b'; c.fillRect(x-30,b-12,60,8); c.fillRect(x-24,b-4,6,14); c.fillRect(x+18,b-4,6,14);
     stageText(c,'💕',x-60,b-150,44,'#fff'); },
-  (c,x,y)=>{ const b=y-74; /* Перші побачення: кав'ярня + колесо огляду */
-    c.strokeStyle='#a54f6a'; c.lineWidth=7; const cx=x+120,cy=b-86; c.beginPath(); c.arc(cx,cy,64,0,7); c.stroke(); c.lineWidth=3;
-    for(let a=0;a<8;a++){ c.beginPath(); c.moveTo(cx,cy); c.lineTo(cx+64*Math.cos(a*Math.PI/4),cy+64*Math.sin(a*Math.PI/4)); c.stroke(); c.fillStyle=['#ff7ab5','#ffd23f','#7ad0ff','#9af08a'][a%4]; c.beginPath(); c.arc(cx+64*Math.cos(a*Math.PI/4),cy+64*Math.sin(a*Math.PI/4),9,0,7); c.fill(); }
-    c.lineWidth=7; c.beginPath(); c.moveTo(cx-34,b); c.lineTo(cx,cy); c.lineTo(cx+34,b); c.stroke();
-    c.fillStyle='#fff'; c.fillRect(x-120,b-86,150,86); c.strokeStyle='#e5c8d4'; c.lineWidth=4; c.strokeRect(x-120,b-86,150,86);
-    for(let i=0;i<6;i++){ c.fillStyle=i%2?'#fff':'#ff74ad'; c.fillRect(x-128+i*26,b-104,26,28); } c.fillStyle='#8a5a2b'; c.fillRect(x-70,b-46,34,46); c.fillStyle='#bfe8ff'; c.fillRect(x-114,b-62,30,28); c.fillRect(x-10,b-62,30,28);
-    stageText(c,'☕',x-52,b-130,48,'#fff'); },
+  (c,x,y)=>{ const b=y-74; /* Моніплод: котяче дерево, будиночок, клубок ниток */
+    c.fillStyle='#c9a46a'; rr(c,x-95,b-26,190,26,8); c.fill();
+    c.fillStyle='#d9b88a'; c.fillRect(x-12,b-112,24,90); c.strokeStyle='#b98f58'; c.lineWidth=3; for(let i=0;i<5;i++){ c.beginPath(); c.moveTo(x-12,b-30-i*18); c.lineTo(x+12,b-40-i*18); c.stroke(); }
+    c.fillStyle='#c9a46a'; rr(c,x-70,b-66,140,16,6); c.fill(); rr(c,x-52,b-112,104,16,6); c.fill();
+    c.fillStyle='#ffb36b'; c.fillRect(x+48,b-92,66,66); c.fillStyle='#e08a3c'; c.beginPath(); c.moveTo(x+40,b-92); c.lineTo(x+81,b-122); c.lineTo(x+122,b-92); c.closePath(); c.fill(); c.fillStyle='#5a3418'; c.beginPath(); c.arc(x+81,b-56,15,Math.PI,0); c.lineTo(x+96,b-26); c.lineTo(x+66,b-26); c.closePath(); c.fill();
+    c.fillStyle='#ff74ad'; c.beginPath(); c.arc(x-128,b-16,18,0,7); c.fill(); c.strokeStyle='#e84a8a'; c.lineWidth=3; c.beginPath(); c.arc(x-128,b-16,12,.4,2.6); c.stroke(); c.beginPath(); c.moveTo(x-110,b-16); c.quadraticCurveTo(x-80,b+4,x-62,b-4); c.stroke(); },
   (c,x,y)=>{ const b=y-74; /* Смаки: піцерія з великою піцою */
     c.fillStyle='#ffe9c9'; c.fillRect(x-130,b-84,150,84); c.fillStyle='#e63946'; c.fillRect(x-140,b-100,170,24); c.fillStyle='#8a5a2b'; c.fillRect(x-80,b-48,32,48); c.fillStyle='#bfe8ff'; c.fillRect(x-124,b-66,30,26); c.fillRect(x-28,b-66,30,26);
     c.fillStyle='#b5651d'; c.fillRect(x-100,b-132,22,34); for(let i=0;i<3;i++){ c.fillStyle='#ffffffcc'; c.beginPath(); c.arc(x-89+i*8,b-144-i*18,10+i*3,0,7); c.fill(); }
@@ -745,7 +747,9 @@ function paintWorld(c,P){
   for(let a=0;a<4;a++){ c.save(); c.rotate(a*Math.PI/2); c.fillStyle=a===0?'#e63946':'#f0509a'; c.beginPath(); c.moveTo(0,-68); c.lineTo(14,0); c.lineTo(-14,0); c.closePath(); c.fill(); c.restore(); }
   stageText(c,'N',0,-90,26,'#fff','#a54f6a'); c.restore();
 }
-function animWorld(c,t){
+const mapCat=new Image(); mapCat.src='photos/cat/cat3.png';
+function animWorld(c,t,P){
+  if(P&&mapCat.complete&&mapCat.naturalWidth){ const cx=P[1].x, top=P[1].y-74-112; const w=84, h=w*mapCat.naturalHeight/mapCat.naturalWidth; c.drawImage(mapCat,cx-w/2,top-h+10+Math.sin(t*2)*2,w,h); }
   for(let i=0;i<4;i++){ const x=((i*620+t*22)%2500)-300; cloud(c,x,130+(i%2)*60+Math.sin(t*.4+i)*8,1.1,.8); }
   const bx=260+Math.sin(t*.3)*60, by=880+Math.sin(t*1.2)*5; c.save(); c.translate(bx,by-30); c.fillStyle='#fff'; c.beginPath(); c.moveTo(0,-70); c.lineTo(44,-6); c.lineTo(0,-6); c.closePath(); c.fill(); c.fillStyle='#ff74ad'; rr(c,-44,-6,100,22,8); c.fill(); c.restore();
   const px=((t*80)%2300)-150; stageText(c,'✈️',px,300+Math.sin(t)*14,60,'#fff');
@@ -764,9 +768,9 @@ function sceneLabel(x,y,title,sub,w){ const l=el('div',{class:'mlabel'},el('b',{
 function worldMap(){
   stopGame();
   const sc=openScene(), c=sc.c, N=WORLD.length;
-  const P=[{x:250,y:640},{x:640,y:390},{x:1040,y:660},{x:1430,y:380},{x:1770,y:620}];
+  const P=[{x:250,y:640},{x:640,y:410},{x:1040,y:660},{x:1430,y:380},{x:1770,y:620}];
   const bg=document.createElement('canvas'); bg.width=SW; bg.height=SH; paintWorld(bg.getContext('2d'),P);
-  let t=0; raf(dt=>{ t+=dt; c.drawImage(bg,0,0); animWorld(c,t); });
+  let t=0; raf(dt=>{ t+=dt; c.drawImage(bg,0,0); animWorld(c,t,P); });
   let curIdx=WORLD.findIndex((_,i)=>locUnlocked(i)&&locProgress(i)<WORLD[i].levels.length); if(curIdx<0) curIdx=N-1;
   WORLD.forEach((L,i)=>{
     const open=locUnlocked(i), prog=locProgress(i), full=prog===L.levels.length;
@@ -1371,7 +1375,7 @@ function pixelScreen(Q){
   const src=document.createElement('canvas'); src.width=src.height=300; const sx=src.getContext('2d');
   const STEPS=[6,9,14,22,40,90,300]; let st=0;
   const drawSrc=img=>{ sx.fillStyle='#fff0f6'; sx.fillRect(0,0,300,300);
-    if(img) sx.drawImage(img,0,0,300,300); else { sx.font='200px serif'; sx.textAlign='center'; sx.textBaseline='middle'; sx.fillText(Q.emoji,150,165); } paint(); };
+    if(img){ const sc=Math.max(300/img.naturalWidth,300/img.naturalHeight), dw=img.naturalWidth*sc, dh=img.naturalHeight*sc; sx.drawImage(img,(300-dw)/2,(300-dh)/2,dw,dh); } else { sx.font='200px serif'; sx.textAlign='center'; sx.textBaseline='middle'; sx.fillText(Q.emoji,150,165); } paint(); };
   const paint=()=>{ const s=STEPS[st], off=document.createElement('canvas'); off.width=off.height=s;
     off.getContext('2d').drawImage(src,0,0,s,s); ctx.imageSmoothingEnabled=false; ctx.clearRect(0,0,300,300); ctx.drawImage(off,0,0,300,300); };
   if(Q.image){ const im=new Image(); im.onload=()=>drawSrc(im); im.onerror=()=>drawSrc(null); im.src=Q.image; } else drawSrc(null);
