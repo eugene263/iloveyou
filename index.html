@@ -530,11 +530,11 @@ const QUESTIONS = [
 
 /* 🎟️ Фінальний сюрприз — запрошення на справжнє побачення (заповни!) */
 const INVITE = {
-  title: "Запрошення на побачення",
+  title: "Спільна готовка",
   when:  "[Дата і час]",
-  where: "[Місце]",
-  note:  "Дрес-код: гарний настрій. Беру з собою обійми і піцу 💕",
-  photo: ""            // шлях до вашого фото, напр. "photos/us.jpg" (можна лишити порожнім)
+  program: ["🥐 сінабони","🎃 гарбузовий крем-суп","🍷 глінтвейн","📱 вечірній перегляд твоїх мемчиків"],
+  note:  "",
+  photo: "photos/invite.jpg"
 };
 
 /* 🏅 Ачівки */
@@ -1039,8 +1039,9 @@ function ticketScreen(){
       el('div',{class:'rank',text:INVITE.title}),
       el('p',{},el('b',{text:'Для: '}),state.name),
       el('p',{},el('b',{text:'Коли: '}),INVITE.when),
-      el('p',{},el('b',{text:'Де: '}),INVITE.where),
-      el('p',{text:INVITE.note}));
+      el('p',{},el('b',{text:'У програмі: '})),
+      el('ul',{style:'text-align:left;margin:4px auto;max-width:300px;padding-left:20px'},INVITE.program.map(t=>el('li',{text:t}))),
+      INVITE.note?el('p',{text:INVITE.note}):'');
   const box = el('div',{class:'ticketbox'},tk);
   render(el('div',{class:'card center'},
     el('p',{text:'Подряпай, щоб відкрити сюрприз 👇'}), box,
