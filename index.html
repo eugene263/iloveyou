@@ -1070,8 +1070,6 @@ function resultScreen(){
           el('span',{text:state.ach.has(id)?ACH[id][0]:'🔒'}),el('small',{text:ACH[id][1]})))));})(),
     el('button',{class:'btn ghost',style:'margin:14px 0 0',text:`🎁 Мої призи за бали: ${state.lvl.size}/${LEVELS.length}`,onclick:openRewards}),
     el('button',{class:'btn',style:'margin-top:18px',text:'🎁 Відкрити подарунок',onclick:ticketScreen}),
-    wrong.length ? el('h2',{text:'Над чим працюємо:'}) : '',
-    recap,
     el('button',{class:'btn',style:'margin-top:20px',text:'Зіграти ще раз 🔁',onclick:()=>{ resetState(); introScreen(); }}),
     el('button',{class:'btn ghost',text:'Показати результат 📸',onclick:()=>confetti(80)})
   ));
