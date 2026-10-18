@@ -238,6 +238,13 @@
   .sbar{width:300px;height:22px;background:#ffdeeb;border-radius:11px;overflow:hidden}.sbar i{display:block;height:100%;background:linear-gradient(90deg,#ff9ec7,#f0509a)}
   .sback{position:absolute;left:50px;top:50px;background:#fff;border:6px solid #a54f6a;border-radius:36px;font:600 34px Fredoka,sans-serif;color:#a82d66;padding:8px 28px;cursor:pointer;box-shadow:0 6px 0 #a54f6a55}
   .sprog{position:absolute;right:56px;top:58px;background:#fff;border:6px solid #a54f6a;border-radius:36px;font-size:32px;padding:8px 28px;box-shadow:0 6px 0 #a54f6a55}
+
+  .dwrap{position:relative;margin:8px 0;border-radius:16px;overflow:hidden;border:4px solid #fff;box-shadow:0 5px 0 #ffc2d9;cursor:crosshair;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+  .dcv{display:block;width:100%;height:auto;background:#ffe3ef;min-height:120px}
+  .dmark{position:absolute;transform:translate(-50%,-50%);aspect-ratio:1;border:4px solid #3ecf8e;border-radius:50%;box-shadow:0 0 0 2px #fff;pointer-events:none;animation:pop .3s}
+  .dmark.rev{border-color:#ff9f1c}.dmark.hint{border-color:#f0509a;animation:pulse .6s infinite}
+  .dmiss{position:absolute;transform:translate(-50%,-50%);font-size:1.6rem;pointer-events:none;animation:fadeout .7s forwards}
+  @keyframes fadeout{to{opacity:0;transform:translate(-50%,-90%)}}
 </style>
 </head>
 <body>
@@ -408,9 +415,18 @@ const QUESTIONS = [
     items:[ { emoji:"☕", label:"Каву", answer:60 }, { emoji:"😴", label:"Спати", answer:95 }, { emoji:"⚽", label:"Футбол", answer:20 } ],
     ok:"Ти мене добре знаєш 😎", no:"Хм, а я думав, що ти зрозумієш 😄" },
 
-  { id:"n9", type:"map", emoji:"🗺️", q:"Тапни на карті: куди ми їздили в першу подорож?",
-    target:{x:30,y:62}, radius:12, answerText:"[місце першої подорожі]",
-    ok:"Ти це пам'ятаєш! ✈️", no:"Карта — не твоє, але подорож була чудова 😘" },
+  { id:"n9", type:"diff", emoji:"🔍", q:"Що змінилось на фото з нашої першої подорожі?",
+    image:"photos/trip1.jpg", maxMiss:5,
+    /* diffs — місця відмінностей у % (x,y — центр, r — радіус). Без imageB друге фото генерується автоматично.
+       Своя пара фото: додай imageB:"photos/trip1b.jpg" і прибери fx з diffs. */
+    diffs:[
+      { x:62, y:66, r:6.5, fx:"tint", color:"#ff3d9a" },
+      { x:61.5, y:24, r:5.5, fx:"emoji", e:"🌸" },
+      { x:44.5, y:76, r:4.5, fx:"clone", from:[44.5,90] },
+      { x:36, y:17, r:4.5, fx:"emoji", e:"🍎" },
+      { x:12, y:60, r:6, fx:"clone", from:[12,78] }
+    ],
+    ok:"Око-алмаз! 🔍", no:"Щось ми все ж проґавили 😄" },
 
   { id:"n10", type:"pixel", emoji:"🏔️", q:"Що на фото з нашої подорожі?",
     options:["[Правильна відповідь]","Гори","Море","Готель"],
@@ -1343,6 +1359,50 @@ function pixelScreen(Q){
 }
 
 const TYPES={slider:sliderScreen,order:orderScreen,swipe:swipeScreen,text:textScreen,who:whoScreen,fill:fillScreen,map:mapScreen,pixel:pixelScreen};
+
+/* --- 🔍 знайди відмінності ---
+   Q.image — фото; Q.imageB — друге фото (необов'язково: якщо немає, друге фото створюється з першого
+   за списком Q.diffs). diffs: [{x,y,r}] у % ширини фото (+ fx для автоген.: tint|dark|emoji|clone). */
+function diffScreen(Q){
+  state.answered=false; const fb=el('div'), N=Q.diffs.length, found=new Set(); let miss=0, ready=false, W=1, H=1, over=false;
+  const MAXMISS=Q.maxMiss||5, info=el('p',{class:'timer'});
+  const cA=el('canvas',{class:'dcv'}), cB=el('canvas',{class:'dcv'});
+  const wA=el('div',{class:'dwrap'},cA), wB=el('div',{class:'dwrap'},cB);
+  const upd=()=>{ info.textContent=`Знайдено ${found.size}/${N} • помилки ${'❌'.repeat(miss)}${'▫️'.repeat(Math.max(0,MAXMISS-miss))}`; }; upd();
+  function fx(c,img,d){ const cx=d.x/100*W, cy=d.y/100*H, r=d.r/100*W;
+    c.save(); c.beginPath(); c.ellipse(cx,cy,r,r,0,0,7);
+    if(d.fx==='tint'){ c.clip(); c.globalCompositeOperation='color'; c.fillStyle=d.color||'#ff3d9a'; c.fillRect(cx-r,cy-r,2*r,2*r); }
+    else if(d.fx==='dark'){ c.clip(); c.fillStyle='rgba(0,0,0,.5)'; c.fillRect(cx-r,cy-r,2*r,2*r); }
+    else if(d.fx==='clone'){ c.clip(); const sx=d.from[0]/100*W, sy=d.from[1]/100*H; c.drawImage(img,sx-r,sy-r,2*r,2*r,cx-r,cy-r,2*r,2*r); }
+    else if(d.fx==='emoji'){ c.restore(); c.save(); c.font=`${r*2}px serif`; c.textAlign='center'; c.textBaseline='middle'; c.fillText(d.e,cx,cy); }
+    c.restore(); }
+  const img=new Image();
+  img.onload=()=>{ W=img.naturalWidth; H=img.naturalHeight; cA.width=cB.width=W; cA.height=cB.height=H;
+    cA.getContext('2d').drawImage(img,0,0);
+    const cb=cB.getContext('2d');
+    if(Q.imageB){ const i2=new Image(); i2.onload=()=>{ cb.drawImage(i2,0,0,W,H); ready=true; }; i2.src=Q.imageB; }
+    else { cb.drawImage(img,0,0); Q.diffs.forEach(d=>fx(cb,img,d)); ready=true; } };
+  img.src=Q.image;
+  const mark=(d,cls)=>{ for(const w of [wA,wB]){ const m=el('div',{class:'dmark'+(cls?' '+cls:'')}); m.style.left=d.x+'%'; m.style.top=(d.y/100*H/W*100*(W/H))+'%'; m.style.width=(Math.max(d.r*2.4,9))+'%'; w.append(m); } };
+  const flash=(w,e)=>{ const r=w.getBoundingClientRect(), x=(e.clientX-r.left)/r.width*100, y=(e.clientY-r.top)/r.height*100; const m=el('div',{class:'dmiss',text:'❌'}); m.style.left=x+'%'; m.style.top=y+'%'; w.append(m); setTimeout(()=>m.remove(),700); };
+  function tapAt(w,e){
+    if(over||!ready) return; const r=w.getBoundingClientRect(), px=(e.clientX-r.left)/r.width*100, py=(e.clientY-r.top)/r.height*100;
+    const hit=Q.diffs.findIndex((d,i)=>!found.has(i)&&Math.hypot(px-d.x,(py-d.y)*(H/W))<=Math.max(d.r*1.5,4.5));
+    if(hit>=0){ found.add(hit); mark(Q.diffs[hit]); vibrate(20); }
+    else { miss++; flash(w,e); vibrate([40,30,40]); }
+    upd(); if(found.size>=N||miss>=MAXMISS) finish(false); }
+  for(const w of [wA,wB]) w.addEventListener('pointerdown',e=>{ e.preventDefault(); tapAt(w,e); });
+  function finish(reveal){ if(over) return; over=true; hintBtn.disabled=giveBtn.disabled=true;
+    if(reveal||found.size<N) Q.diffs.forEach((d,i)=>{ if(!found.has(i)) mark(d,'rev'); });
+    resolve(Q,found.size/N,fb,{answer:`${N} відмінностей`,detail:`Знайдено ${found.size}/${N}`}); }
+  const hintBtn=el('button',{class:'hint',text:`💡 Підказка (${state.hints})`});
+  if(!state.hints) hintBtn.disabled=true;
+  hintBtn.addEventListener('click',()=>{ if(over||!state.hints) return; const i=Q.diffs.findIndex((_,k)=>!found.has(k)); if(i<0) return; state.hints--; hintBtn.textContent=`💡 Підказка (${state.hints})`; if(!state.hints) hintBtn.disabled=true;
+    const d=Q.diffs[i]; mark(d,'hint'); setTimeout(()=>{ document.querySelectorAll('.dmark.hint').forEach(m=>m.remove()); },1800); });
+  const giveBtn=el('button',{class:'hint',text:'🏳️ Здаюсь (показати відповіді)'}); giveBtn.addEventListener('click',()=>finish(true));
+  shell(Q, el('p',{class:'center',style:'font-size:.9rem',text:`Знайди ${N} відмінностей між двома фото. Тапай по місцю різниці на будь-якому з них.`}), info, wA, wB, hintBtn, giveBtn, fb);
+}
+TYPES.diff=diffScreen;
 
 /* --- 🎡 колесо фортуни (міні-гра). WHEEL — призи/завдання, редагуй --- */
 const WHEEL=["🤗 Обійми без ліміту","🍫 Шоколадка","😘 Поцілунок","💆 Масаж 10 хв","🍕 Піца за мій рахунок","🎬 Ти обираєш фільм","🌹 Квіти","🥰 Комплімент ×3"];
