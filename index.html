@@ -247,8 +247,9 @@
   @keyframes fadeout{to{opacity:0;transform:translate(-50%,-90%)}}
 .catpng{display:block;margin:0 auto 12px;max-height:190px;max-width:75%;width:auto;height:auto;object-fit:contain;
     filter:drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff) drop-shadow(0 10px 10px #f0509a55);animation:bob 2.4s ease-in-out infinite}
-.fishdrop{position:absolute;top:0;left:calc(50% + var(--dx,0px));font-size:2rem;pointer-events:none;z-index:3;opacity:0;animation:fishfall .6s ease-in forwards}
-  @keyframes fishfall{0%{opacity:1;transform:translateY(-6px) rotate(var(--r,0deg))}80%{opacity:1}100%{opacity:0;transform:translateY(150px) rotate(calc(var(--r,0deg)*2))}}
+.fishwrap{position:relative}
+  .fishdrop{position:absolute;font-size:2rem;line-height:1;pointer-events:none;z-index:5;opacity:0;animation:fishup .55s ease-out forwards}
+  @keyframes fishup{0%{opacity:1;transform:translate(0,0) scale(.8) rotate(0)}85%{opacity:1}100%{opacity:0;transform:translate(var(--dx,0),var(--dy,-200px)) scale(1.1) rotate(var(--r,0deg))}}
 </style>
 </head>
 <body>
@@ -1084,12 +1085,21 @@ function gameCat(done){
     if(n>=GOAL){ award('cat'); end(); }
   };
   const box=el('div',{class:'game-box'},cat,el('div',{class:'meter'},m),tm);
-  function dropFish(k){ for(let i=0;i<k;i++){ const f=el('span',{class:'fishdrop',text:pick(['🐟','🐟','🐠','🐟','🍣'])});
-    f.style.setProperty('--dx',(Math.random()*120-60)+'px'); f.style.setProperty('--r',(Math.random()*80-40)+'deg'); f.style.animationDelay=(i*60)+'ms';
-    box.append(f); setTimeout(()=>f.remove(),900+i*60); } }
+  /* рибки летять від кнопки знизу вгору до кота */
+  function dropFish(k){
+    const wr=wrap.getBoundingClientRect(), br=btn.getBoundingClientRect(), cr=catPic.getBoundingClientRect();
+    for(let i=0;i<k;i++){
+      const f=el('span',{class:'fishdrop',text:pick(['🐟','🐟','🐠','🐟','🍣'])});
+      const sx=br.left+br.width/2+(Math.random()*120-60)-wr.left, sy=br.top+br.height/2-wr.top;
+      const tx=cr.left+cr.width/2+(Math.random()*50-25)-wr.left, ty=cr.top+cr.height*0.55-wr.top;
+      f.style.left=(sx-16)+'px'; f.style.top=(sy-16)+'px';
+      f.style.setProperty('--dx',(tx-sx)+'px'); f.style.setProperty('--dy',(ty-sy)+'px'); f.style.setProperty('--r',(Math.random()*120-60)+'deg');
+      f.style.animationDelay=(i*70)+'ms'; wrap.append(f); setTimeout(()=>f.remove(),800+i*70);
+    } }
   const key=e=>{ if(e.code==='Space'){e.preventDefault(); if(!e.repeat) press();} };
   document.addEventListener('keydown',key); onCleanup(()=>document.removeEventListener('keydown',key));
   const btn=el('button',{class:'btn',text:'🐟 ГОДУЙ! 🐟',onclick:press});
+  const wrap=el('div',{class:'fishwrap'},box,btn);
   function end(){
     if(over) return; over=true;
     const pts=Math.min(150,Math.round(n/GOAL*150)), win=n>=GOAL;
@@ -1098,7 +1108,7 @@ function gameCat(done){
   }
   playCard('Нагодуй голодного котика!',
     el('p',{},'Швидко клацай ',el('span',{class:'kbd',text:'ПРОБІЛ'}),' (або тапай по кнопці) — за 7 секунд!'),
-    box, btn);
+    wrap);
   countdown(7,t=>tm.textContent=`⏱ ${t}`,end);
 }
 gameCat.intro = go => introCard('🐱','Нагодуй котика!','Котик дуже голодний. Клацай ПРОБІЛ (на телефоні — тапай по кнопці) якомога швидше, поки не закінчився час.',go);
