@@ -253,6 +253,7 @@
 .big-emoji.long{font-size:2.5rem;line-height:1.25;letter-spacing:.04em;animation:none}
 .spotwrap{touch-action:none;cursor:grab}
   .spotdark{position:absolute;inset:0;width:100%;height:100%;transition:opacity .8s}.spotdark.gone{opacity:0}
+.optgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}.optgrid .opt{font-size:.95rem;padding:11px 10px;text-align:center;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -427,8 +428,8 @@ const QUESTIONS = [
 
 /* ====== Локація «Моніплод» (наш кіт). Відповіді в заглушках — заміни на свої ====== */
   { id:"m1", emoji:"🐱", q:"Як звати нашого кота?",
-    options:["Моніплод","Барсік","Мурзік","Пончик"],
-    ok:"Правильно!", no:"Не вгадала." },
+    options:["Монічка","Моніплод","Монін","Мончельнік","Мандон","Монідєльнік","Манаконда","Моніка","Монзес","Моньчао","Монделла","Монінатор"],
+    ok:"Правильно!", no:"Не вгадала. У нього багато прізвиськ 🙂" },
 
   { id:"m2", type:"slider", emoji:"🐾", q:"Наскільки Моніплод любить…? (±10)",
     tolerance:10,
@@ -943,7 +944,7 @@ function questionScreen(Q){
 
   render(el('div',{class:'card'}, ...hud(),
     Q.photo ? el('img',{class:'qphoto',src:Q.photo,alt:''}) : emojiEl(Q),
-    el('h2',{text:Q.q}), ...btns, hintBtn, fb));
+    el('h2',{text:Q.q}), ...(Q.options.length>6?[el('div',{class:'optgrid'},...btns)]:btns), hintBtn, fb));
 }
 
 function bossScreen(){
