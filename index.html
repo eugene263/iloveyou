@@ -435,32 +435,33 @@ const QUESTIONS = [
     items:["🏖️ Італія на море","🌊 Португалія (океан)","🏰 Франція (Діснейленд)","🐪 Єгипет (на місяць у січні)","⛰️ Грузія в гори (курорт)"],
     ok:"Квитки вже в корзині 🛒", no:"Ну ж бо, ми це обговорювали 😅" },
 
-  { id:"n16", type:"slider", emoji:"💖", q:"Наскільки я тебе люблю? (±10)",
+  /* ====== Локація «Наші перемоги й рекорди» ====== */
+  { id:"w1", emoji:"🍳", q:"Яке наше найдовше готування їжі?",
+    options:["Сінабони","Крем-суп","Наготування їжі на тиждень","Лазанья"],
+    ok:"Так! Тісто вимотало нас, але воно того варте 🥐", no:"Пахло на весь дім, але готували ми довго 😅" },
+
+  { id:"w2", type:"slider", emoji:"🛣️", q:"Наскільки ми були втомлені після нашої найдовшої подорожі? (±10)",
     tolerance:10,
-    items:[ { emoji:"💖", label:"Тебе", answer:100 }, { emoji:"🤗", label:"Твої обійми", answer:100 } ],
-    ok:"Це ж очевидно! 😍", no:"Це був підступний тест 😏" },
+    items:[ { emoji:"😴", label:"Втома", answer:70 }, { emoji:"😄", label:"Радість", answer:95 }, { emoji:"🍔", label:"Голод", answer:80 } ],
+    ok:"Ти пам'ятаєш кожну хвилину 💞", no:"Ми були виснажені, але щасливі 😄" },
 
-  { id:"s1", emoji:"🎁", q:"Який подарунок для мене був найбільш незабутнім?",
-    options:["[Справжній подарунок]","Шкарпетки з котиками","Сертифікат на піцу","Горнятко «Найкращий у світі»"],
-    ok:"Така пам'ять — на вагу золота 🥇", no:"Ну, подарунків було багато, не ображайся 😅" },
+  { id:"w3", type:"order", emoji:"🥇", q:"Розклади наші «перші» за часом",
+    items:["💋 Перший поцілунок","✈️ Перша спільна подорож","🍳 Перше довге готування","😤 Перша сварка","🎄 Перший спільний Новий рік"],
+    ok:"Ідеальна хронологія ✨", no:"Не страшно, головне, що все це було разом 😄" },
 
-  { id:"s2", type:"slider", emoji:"🎀", q:"Наскільки я люблю…? (±10)",
-    tolerance:10,
-    items:[ { emoji:"🎁", label:"Отримувати подарунки", answer:80 }, { emoji:"🎉", label:"Сюрпризи", answer:70 }, { emoji:"🌹", label:"Квіти", answer:60 } ],
-    ok:"Ти знаєш, чим мене порадувати 😍", no:"Хм, ще є чому вчитись 😄" },
-
-  { id:"s3", type:"swipe", emoji:"🎊", q:"Правда чи міф про наші свята?",
+  { id:"w4", type:"swipe", emoji:"🏆", q:"Правда чи міф про наші рекорди?",
     cards:[
-      { t:"Ми ніколи не святкували річницю окремо", a:false },
-      { t:"Ти любиш сюрпризи більше, ніж я", a:true },
-      { t:"Я вмію красиво загортати подарунки", a:false },
-      { t:"Новий рік ми завжди зустрічаємо разом", a:true }
+      { t:"Ми ніколи не сварились довше за добу", a:true },
+      { t:"Найдовше ми готували сінабони", a:true },
+      { t:"Наша найдовша подорож була на місяць", a:false },
+      { t:"Ми жодного разу не запізнювались на вокзал", a:false }
     ],
-    ok:"Святкова експертка! 🎉", no:"Ми ще багато свят відсвяткуємо разом 🥂" },
+    ok:"Рекордсменка! 🏅", no:"Рекорди ще попереду 😉" },
 
-  { id:"n17", emoji:"💍", q:"Що я обіцяю тобі на все життя?",
-    options:["[Справжня обіцянка]","Робити чай у ліжко","Завжди віддавати останній шматок піци","Ніколи не їсти твою їжу без дозволу"],
-    ok:"Це ж мої слова! 🥹", no:"Усе це я теж обіцяю 😄" },
+  { id:"w5", type:"who", emoji:"🕊️", q:"Хто з нас першим мириться після сварки?",
+    answer:"me",
+    ok:"Так, і не пошкодував(ла) 💖", no:"Хмм, а я думав, що це я 🤔" }
+
 ];
 
 /* 🎟️ Фінальний сюрприз — запрошення на справжнє побачення (заповни!) */
@@ -608,8 +609,8 @@ const WORLD = [
     levels:["q7","q8","g:sushi","q9","q11","g:wheel","q12","n8","q13","g:paws"] },
   { name:"Подорожі та мрії", emoji:"✈️", color:"#7ad0ff", text:"Куди ми вже їздили й куди мрієм",
     levels:["q18","n9","g:chicken","n10","n11","g:hearts","n12","n13","q17","g:sushi"] },
-  { name:"Свята та сюрпризи", emoji:"🎁", color:"#c9a0ff", text:"Подарунки, річниці й найголовніше",
-    levels:["q15","s1","g:kiss","s2","s3","q16","g:wheel","n16","n17","boss"] }
+  { name:"Наші перемоги й рекорди", emoji:"🏆", color:"#c9a0ff", text:"Досягнення, рекорди й найсмішніші моменти",
+    levels:["w1","w2","g:chicken","w3","w4","q15","g:sushi","w5","q16","boss"] }
 ];
 const LOC_BONUS = 200;
 const GAME_BY = { cat:()=>gameCat, chicken:()=>gameChicken, hearts:()=>gameHearts, sushi:()=>gameSushi, kiss:()=>gameKiss, paws:()=>gamePaws, memory:()=>gameMemory, wheel:()=>gameWheel };
@@ -687,13 +688,12 @@ const LANDMARKS=[
     c.fillStyle='#ffd23f'; rr(c,x+76,b-156,30,26,6); c.fill(); c.fillStyle='#e63946'; c.beginPath(); c.moveTo(x+70,b-156); c.lineTo(x+91,b-182); c.lineTo(x+112,b-156); c.closePath(); c.fill();
     c.strokeStyle='#8a5a2b'; c.lineWidth=9; c.beginPath(); c.moveTo(x+170,b+10); c.quadraticCurveTo(x+176,b-50,x+160,b-90); c.stroke();
     c.fillStyle='#4caf50'; for(const a of [-2.6,-2,-1.2,-.5]){ c.save(); c.translate(x+160,b-90); c.rotate(a); c.beginPath(); c.ellipse(34,0,38,10,0,0,7); c.fill(); c.restore(); } },
-  (c,x,y)=>{ const b=y-74; /* Свята: подарунок, повітряні кульки, торт */
-    for(const [bx,by,col] of [[-120,-170,'#ff5c7a'],[-70,-195,'#ffd23f'],[-150,-140,'#7ad0ff'],[160,-160,'#9af08a']]){ c.strokeStyle='#8a8a99'; c.lineWidth=3; c.beginPath(); c.moveTo(x+bx,b+by+28); c.lineTo(x+(bx<0?-20:60),b-70); c.stroke();
-      c.fillStyle=col; c.beginPath(); c.ellipse(x+bx,b+by,24,30,0,0,7); c.fill(); c.fillStyle='#ffffff66'; c.beginPath(); c.ellipse(x+bx-8,b+by-10,6,10,0,0,7); c.fill(); }
-    c.fillStyle='#ff74ad'; c.fillRect(x-50,b-82,120,82); c.fillStyle='#ff9ec7'; c.fillRect(x-58,b-108,136,28);
-    c.fillStyle='#ffd23f'; c.fillRect(x+4,b-108,22,108); c.fillStyle='#ffd23f'; for(const dx of [-18,18]){ c.beginPath(); c.ellipse(x+15+dx,b-122,20,13,dx<0?-.4:.4,0,7); c.fill(); }
-    c.fillStyle='#fff4e0'; c.fillRect(x+105,b-50,80,50); c.fillStyle='#ff9ec7'; c.fillRect(x+105,b-62,80,16); c.fillStyle='#ffd23f'; c.fillRect(x+141,b-86,8,24); c.fillStyle='#ff7a1c'; c.beginPath(); c.ellipse(x+145,b-92,6,9,0,0,7); c.fill();
-    for(let i=0;i<14;i++){ c.fillStyle=['#ff5c7a','#ffd23f','#7ad0ff','#9af08a'][i%4]; c.fillRect(x-170+((i*47)%340),b-210+((i*29)%150),8,8); } }
+  (c,x,y)=>{ const b=y-74; /* Перемоги: п'єдестал і кубок */
+    for(let i=0;i<16;i++){ c.fillStyle=['#ff5c7a','#ffd23f','#7ad0ff','#9af08a'][i%4]; c.fillRect(x-170+((i*47)%340),b-200+((i*29)%150),8,8); }
+    for(const [dx,h,n,col] of [[-90,60,'2','#cfd8e3'],[0,90,'1','#ffd23f'],[90,44,'3','#e0a070']]){ c.fillStyle=col; c.fillRect(x+dx-44,b-h,88,h); c.strokeStyle='#00000022'; c.lineWidth=4; c.strokeRect(x+dx-44,b-h,88,h); stageText(c,n,x+dx,b-h/2,40,'#fff','#a54f6a'); }
+    const cx=x, cy=b-90; c.fillStyle='#ffc21a'; c.strokeStyle='#d99a00'; c.lineWidth=5; c.beginPath(); c.moveTo(cx-34,cy-70); c.lineTo(cx+34,cy-70); c.lineTo(cx+22,cy-20); c.quadraticCurveTo(cx,cy-4,cx-22,cy-20); c.closePath(); c.fill(); c.stroke();
+    c.lineWidth=6; c.beginPath(); c.arc(cx-40,cy-52,16,Math.PI*.5,Math.PI*1.5); c.stroke(); c.beginPath(); c.arc(cx+40,cy-52,16,-Math.PI*.5,Math.PI*.5); c.stroke();
+    c.fillStyle='#ffc21a'; c.fillRect(cx-6,cy-10,12,14); c.fillRect(cx-24,cy+2,48,10); stageText(c,'⭐',cx,cy-46,28,'#fff'); }
 ];
 function paintWorld(c,P){
   const sea=c.createLinearGradient(0,0,0,SH); sea.addColorStop(0,'#7fd0f2'); sea.addColorStop(1,'#a9e4f8'); c.fillStyle=sea; c.fillRect(0,0,SW,SH);
