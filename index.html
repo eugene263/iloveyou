@@ -254,6 +254,10 @@
 .spotwrap{touch-action:none;cursor:grab}
   .spotdark{position:absolute;inset:0;width:100%;height:100%;transition:opacity .8s}.spotdark.gone{opacity:0}
 .optgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}.optgrid .opt{font-size:.95rem;padding:11px 10px;text-align:center;overflow-wrap:anywhere}
+  .laser{background:linear-gradient(#fff6fa,#ffe3ef);height:300px}
+  .ldot{position:absolute;font-size:2.4rem;line-height:1;background:none;border:0;padding:10px;cursor:pointer;transition:left .12s,top .12s;transform:translate(-50%,-50%);z-index:2}
+  .lcat{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);max-height:120px;max-width:60%;animation:none;transition:transform .15s}
+  .lcat.bump2{transform:translateX(-50%) scale(1.15) rotate(-4deg)}
 </style>
 </head>
 <body>
@@ -631,7 +635,7 @@ const WORLD = [
   { name:"Знайомство",       emoji:"👀", color:"#ff9ec7", text:"Де й як усе почалось…",
     levels:["q1","q2","g:cat","q10","n1","g:hearts","n2","n3","q6","g:memory"] },
   { name:"Моніплод", emoji:"🐱", color:"#ffb36b", text:"Наш кіт",
-    levels:["m1","m2","g:cat","m3","m4","m5","g:paws","m6","m7","g:chicken"] },
+    levels:["m1","m2","g:cat","m3","m4","m5","g:paws","m6","m7","g:laser"] },
   { name:"Смаки та звички",  emoji:"🍕", color:"#ffd166", text:"Що ми любимо (і що нас бісить)",
     levels:["q7","q8","g:sushi","q9","q11","g:wheel","q12","n8","q13","g:paws"] },
   { name:"Подорожі та мрії", emoji:"✈️", color:"#7ad0ff", text:"Куди ми вже їздили й куди мрієм",
@@ -642,7 +646,7 @@ const WORLD = [
 const LOC_BONUS = 200;
 /* 🔓 Режим тестування: true = будь-яка локація відкрита й можна переграти пройдену. ПЕРЕД ПОДАРУНКОМ постав false! */
 const DEV_UNLOCK_ALL = true;
-const GAME_BY = { cat:()=>gameCat, chicken:()=>gameChicken, hearts:()=>gameHearts, sushi:()=>gameSushi, kiss:()=>gameKiss, paws:()=>gamePaws, memory:()=>gameMemory, wheel:()=>gameWheel };
+const GAME_BY = { laser:()=>gameLaser, cat:()=>gameCat, chicken:()=>gameChicken, hearts:()=>gameHearts, sushi:()=>gameSushi, kiss:()=>gameKiss, paws:()=>gamePaws, memory:()=>gameMemory, wheel:()=>gameWheel };
 
 /* ---- збереження ---- */
 const SAVE_KEY='iloveyou-save-v1';
@@ -1774,6 +1778,23 @@ function gamePaws(done){
 }
 gamePaws.intro=go=>introCard('🐾','Лапки проти комп\'ютера','Гра на весь екран (краще горизонтально). З\'являється рибка: хто швидше вхопить, той забирає. Але іноді вилітає бомба — торкнешся, мінус бал! Тапай будь-де або пробіл. Не клацай зарано!',go);
 
+
+/* ---------- 🔴 Лови лазерну точку (для локації з котом) ---------- */
+function gameLaser(done){
+  let n=0, over=false, mv=null;
+  const arena=el('div',{class:'sky laser'}), dot=el('button',{class:'ldot',text:'🔴','aria-label':'точка'});
+  const cat=el('img',{class:'catpng lcat',src:'photos/cat/cat3.png',alt:'кіт'}), sc=el('div',{class:'timer',text:'🎯 0'}), tm=el('div',{class:'timer'});
+  const place=()=>{ dot.style.left=(8+Math.random()*80)+'%'; dot.style.top=(6+Math.random()*62)+'%'; };
+  const loop=()=>{ place(); mv=setTimeout(loop,Math.max(420,900-n*35)); };
+  dot.addEventListener('pointerdown',e=>{ e.preventDefault(); if(over) return; n++; sc.textContent='🎯 '+n; vibrate(12);
+    cat.classList.add('bump2'); setTimeout(()=>cat.classList.remove('bump2'),150); clearTimeout(mv); loop(); });
+  arena.append(dot,cat); loop(); onCleanup(()=>clearTimeout(mv));
+  function end(){ if(over) return; over=true; clearTimeout(mv); dot.disabled=true;
+    done(Math.min(150,n*12), n>=12?'Усі точки впіймані!':n>=6?`Впіймано ${n}. Непогано!`:`Впіймано лише ${n}.`, 'photos/cat/cat3.png'); }
+  playCard('Лови лазерну точку!', el('p',{text:'Тапай по червоній точці, поки вона не втекла. З кожною спійманою вона швидшає!'}), el('div',{class:'game-box'},sc,tm,arena));
+  countdown(12,t=>tm.textContent=`⏱ ${t}`,end);
+}
+gameLaser.intro=go=>introCard('🔴','Лови лазерну точку','Червона точка бігає по екрану, а кіт за нею стежить. Ловити треба тапом, 12 секунд. Чим більше піймано, тим більше очок.',go);
 
 startScreen();
 </script>
