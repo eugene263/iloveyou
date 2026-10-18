@@ -332,10 +332,10 @@ const QUESTIONS = [
     ok:"Ну звісно ти знаєш, це ж ТВІЙ телефон 😄", no:"Ну ти ж знаєш... перевір контакти 📞" },
 
   /* 10. Заповни пропуски: {0},{1} — місця, blanks[i].answer — правильне слово */
-  { id:"q10", emoji:"🎄⛰️🏊🎡🍄🏨🎂", q:"Яку нашу історію зашифровано цими емодзі?",
-    /* Перший варіант — правильний. Заміни його на справжню відповідь (і 3 хибні на свої). */
-    options:["[Правильна відповідь]","Наша перша зустріч","Наш перший Новий рік","День народження друзів"],
-    ok:"Розшифрувала! Агент Кохання 007 🕵️‍♀️", no:"Ну ти ж мала знати, це наша історія 😄" },
+  { id:"q10", type:"text", emoji:"🎄⛰️🏊🎡🍄🏨🎂", q:"Яке місце зашифровано цими емодзі?",
+    /* accept — прийнятні відповіді. Регістр, пробіли, розділові знаки й одна опечатка не мають значення */
+    accept:["Буковель","Bukovel"], placeholder:"Напиши назву…",
+    ok:"Розшифрувала! Агент Кохання 007 🕵️‍♀️", no:"Підказка: гори, ялинки, готель… ⛷️" },
 
   /* 11. Звичайний вибір */
   { id:"q11", emoji:"🎵", q:"Яка наша пісня?",
@@ -1293,7 +1293,9 @@ function textScreen(Q){
   const go=()=>{
     if(state.answered||!inp.value.trim()) return; btn.remove(); inp.disabled=true;
     const v=norm(inp.value);
-    const ok=Q.accept.some(a=>{const n=norm(a); return v===n || (n.length>4 && lev(v,n)<=1);});
+    /* зараховуємо будь-який регістр, зайві слова («у Буковелі»), відмінки й одну опечатку */
+    const ok=Q.accept.some(a=>{ const n=norm(a), near=t=>t===n||(n.length>4&&lev(t,n)<=1);
+      return near(v) || v.split(' ').some(near); });
     resolve(Q, ok?1:0, fb, {answer:Q.accept[0],detail:ok?'':`Правильно: ${Q.accept[0]}`});
   };
   btn.addEventListener('click',go); inp.addEventListener('keydown',e=>{if(e.key==='Enter')go();});
