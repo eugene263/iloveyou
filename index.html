@@ -342,10 +342,6 @@ const QUESTIONS = [
     ok:"Прямо в ціль 🎯", no:"Ми ще це обговоримо 😏" },
 
   /* 14. Ввести відповідь */
-  { id:"q14", emoji:"🐶", q:"Як звати [мого улюбленця / нашого кота]?",
-    options:["[Ім'я]","Барсік","Мурзік","Пончик"],
-    ok:"Так, це ж член сім'ї! 🐾", no:"Серйозно?! 🙀" },
-
   /* 15. Дата текстом (приймає різні написання) */
   { id:"q15", emoji:"📅", q:"Коли офіційно почались наші стосунки?",
     options:["[Справжня дата]","14 лютого","1 квітня","Завтра"],
@@ -439,20 +435,28 @@ const QUESTIONS = [
     items:["🏖️ Італія на море","🌊 Португалія (океан)","🏰 Франція (Діснейленд)","🐪 Єгипет (на місяць у січні)","⛰️ Грузія в гори (курорт)"],
     ok:"Квитки вже в корзині 🛒", no:"Ну ж бо, ми це обговорювали 😅" },
 
-  { id:"n14", type:"fill", emoji:"🏡", q:"Наше майбутнє",
-    text:"Через 10 років ми будемо жити в {0} разом із {1}.",
-    blanks:[ {options:["[Місто мрії]","на Місяці","в бабусі в селі","в піцерії"],answer:"[Місто мрії]"},
-             {options:["[Улюбленці]","трьома слонами","коровою","сусідом"],answer:"[Улюбленці]"} ],
-    ok:"Ми вже живемо цією мрією ✨", no:"Нічого, мрії можна змінювати 😄" },
-
-  { id:"n15", type:"who", emoji:"🏠", q:"Хто з нас першим скаже «пішли додому»?",
-    answer:"you",
-    ok:"Так, ліниві ми обоє 😂", no:"Хмм, а я думав, що це я 🤔" },
-
   { id:"n16", type:"slider", emoji:"💖", q:"Наскільки я тебе люблю? (±10)",
     tolerance:10,
     items:[ { emoji:"💖", label:"Тебе", answer:100 }, { emoji:"🤗", label:"Твої обійми", answer:100 } ],
     ok:"Це ж очевидно! 😍", no:"Це був підступний тест 😏" },
+
+  { id:"s1", emoji:"🎁", q:"Який подарунок для мене був найбільш незабутнім?",
+    options:["[Справжній подарунок]","Шкарпетки з котиками","Сертифікат на піцу","Горнятко «Найкращий у світі»"],
+    ok:"Така пам'ять — на вагу золота 🥇", no:"Ну, подарунків було багато, не ображайся 😅" },
+
+  { id:"s2", type:"slider", emoji:"🎀", q:"Наскільки я люблю…? (±10)",
+    tolerance:10,
+    items:[ { emoji:"🎁", label:"Отримувати подарунки", answer:80 }, { emoji:"🎉", label:"Сюрпризи", answer:70 }, { emoji:"🌹", label:"Квіти", answer:60 } ],
+    ok:"Ти знаєш, чим мене порадувати 😍", no:"Хм, ще є чому вчитись 😄" },
+
+  { id:"s3", type:"swipe", emoji:"🎊", q:"Правда чи міф про наші свята?",
+    cards:[
+      { t:"Ми ніколи не святкували річницю окремо", a:false },
+      { t:"Ти любиш сюрпризи більше, ніж я", a:true },
+      { t:"Я вмію красиво загортати подарунки", a:false },
+      { t:"Новий рік ми завжди зустрічаємо разом", a:true }
+    ],
+    ok:"Святкова експертка! 🎉", no:"Ми ще багато свят відсвяткуємо разом 🥂" },
 
   { id:"n17", emoji:"💍", q:"Що я обіцяю тобі на все життя?",
     options:["[Справжня обіцянка]","Робити чай у ліжко","Завжди віддавати останній шматок піци","Ніколи не їсти твою їжу без дозволу"],
@@ -604,8 +608,8 @@ const WORLD = [
     levels:["q7","q8","g:sushi","q9","q11","g:wheel","q12","n8","q13","g:paws"] },
   { name:"Подорожі та мрії", emoji:"✈️", color:"#7ad0ff", text:"Куди ми вже їздили й куди мрієм",
     levels:["q18","n9","g:chicken","n10","n11","g:hearts","n12","n13","q17","g:sushi"] },
-  { name:"Наше майбутнє",    emoji:"💞", color:"#c9a0ff", text:"Фінальна локація. Далі — найважливіше",
-    levels:["q14","q16","q15","n14","n15","g:kiss","n16","n17","g:wheel","boss"] }
+  { name:"Свята та сюрпризи", emoji:"🎁", color:"#c9a0ff", text:"Подарунки, річниці й найголовніше",
+    levels:["q15","s1","g:kiss","s2","s3","q16","g:wheel","n16","n17","boss"] }
 ];
 const LOC_BONUS = 200;
 const GAME_BY = { cat:()=>gameCat, chicken:()=>gameChicken, hearts:()=>gameHearts, sushi:()=>gameSushi, kiss:()=>gameKiss, paws:()=>gamePaws, memory:()=>gameMemory, wheel:()=>gameWheel };
@@ -683,15 +687,13 @@ const LANDMARKS=[
     c.fillStyle='#ffd23f'; rr(c,x+76,b-156,30,26,6); c.fill(); c.fillStyle='#e63946'; c.beginPath(); c.moveTo(x+70,b-156); c.lineTo(x+91,b-182); c.lineTo(x+112,b-156); c.closePath(); c.fill();
     c.strokeStyle='#8a5a2b'; c.lineWidth=9; c.beginPath(); c.moveTo(x+170,b+10); c.quadraticCurveTo(x+176,b-50,x+160,b-90); c.stroke();
     c.fillStyle='#4caf50'; for(const a of [-2.6,-2,-1.2,-.5]){ c.save(); c.translate(x+160,b-90); c.rotate(a); c.beginPath(); c.ellipse(34,0,38,10,0,0,7); c.fill(); c.restore(); } },
-  (c,x,y)=>{ const b=y-74; /* Майбутнє: замок і веселка */
-    const cols=['#ff5c7a','#ffa94d','#ffe066','#9af08a','#7ad0ff','#c9a0ff'];
-    cols.forEach((col,i)=>{ c.strokeStyle=col; c.lineWidth=14; c.beginPath(); c.arc(x,b+20,190-i*14,Math.PI,2*Math.PI); c.stroke(); });
-    const tower=(tx,w,h)=>{ c.fillStyle='#ffe0ef'; c.fillRect(tx-w/2,b-h,w,h); c.strokeStyle='#e5b5cc'; c.lineWidth=3; c.strokeRect(tx-w/2,b-h,w,h);
-      c.fillStyle='#ff74ad'; c.beginPath(); c.moveTo(tx-w/2-8,b-h); c.lineTo(tx,b-h-52); c.lineTo(tx+w/2+8,b-h); c.closePath(); c.fill();
-      c.fillStyle='#a54f6a'; c.fillRect(tx-5,b-h+22,10,22); c.strokeStyle='#8a5a2b'; c.lineWidth=3; c.beginPath(); c.moveTo(tx,b-h-52); c.lineTo(tx,b-h-76); c.stroke(); c.fillStyle='#ffd23f'; c.beginPath(); c.moveTo(tx,b-h-76); c.lineTo(tx+24,b-h-68); c.lineTo(tx,b-h-60); c.closePath(); c.fill(); };
-    c.fillStyle='#ffe0ef'; c.fillRect(x-64,b-110,128,110); c.strokeStyle='#e5b5cc'; c.lineWidth=3; c.strokeRect(x-64,b-110,128,110);
-    for(let i=0;i<5;i++) c.fillRect(x-64+i*28,b-124,18,16);
-    tower(x-100,54,150); tower(x+100,54,150); c.fillStyle='#a54f6a'; c.beginPath(); c.moveTo(x-26,b); c.lineTo(x-26,b-44); c.arc(x,b-44,26,Math.PI,0); c.lineTo(x+26,b); c.closePath(); c.fill(); }
+  (c,x,y)=>{ const b=y-74; /* Свята: подарунок, повітряні кульки, торт */
+    for(const [bx,by,col] of [[-120,-170,'#ff5c7a'],[-70,-195,'#ffd23f'],[-150,-140,'#7ad0ff'],[160,-160,'#9af08a']]){ c.strokeStyle='#8a8a99'; c.lineWidth=3; c.beginPath(); c.moveTo(x+bx,b+by+28); c.lineTo(x+(bx<0?-20:60),b-70); c.stroke();
+      c.fillStyle=col; c.beginPath(); c.ellipse(x+bx,b+by,24,30,0,0,7); c.fill(); c.fillStyle='#ffffff66'; c.beginPath(); c.ellipse(x+bx-8,b+by-10,6,10,0,0,7); c.fill(); }
+    c.fillStyle='#ff74ad'; c.fillRect(x-50,b-82,120,82); c.fillStyle='#ff9ec7'; c.fillRect(x-58,b-108,136,28);
+    c.fillStyle='#ffd23f'; c.fillRect(x+4,b-108,22,108); c.fillStyle='#ffd23f'; for(const dx of [-18,18]){ c.beginPath(); c.ellipse(x+15+dx,b-122,20,13,dx<0?-.4:.4,0,7); c.fill(); }
+    c.fillStyle='#fff4e0'; c.fillRect(x+105,b-50,80,50); c.fillStyle='#ff9ec7'; c.fillRect(x+105,b-62,80,16); c.fillStyle='#ffd23f'; c.fillRect(x+141,b-86,8,24); c.fillStyle='#ff7a1c'; c.beginPath(); c.ellipse(x+145,b-92,6,9,0,0,7); c.fill();
+    for(let i=0;i<14;i++){ c.fillStyle=['#ff5c7a','#ffd23f','#7ad0ff','#9af08a'][i%4]; c.fillRect(x-170+((i*47)%340),b-210+((i*29)%150),8,8); } }
 ];
 function paintWorld(c,P){
   const sea=c.createLinearGradient(0,0,0,SH); sea.addColorStop(0,'#7fd0f2'); sea.addColorStop(1,'#a9e4f8'); c.fillStyle=sea; c.fillRect(0,0,SW,SH);
