@@ -121,7 +121,7 @@
   .toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:100;background:#fff;border:3px solid var(--pink-400);border-radius:18px;padding:10px 18px;box-shadow:0 6px 0 var(--pink-300);text-align:center;animation:toast 3.2s forwards;max-width:90vw}
   .toast small{display:block;font-size:.8rem;opacity:.8}
   @keyframes toast{0%{transform:translate(-50%,-90px)}10%,85%{transform:translate(-50%,0)}100%{transform:translate(-50%,-120px)}}
-  .qphoto{display:block;width:100%;max-height:260px;object-fit:cover;border-radius:20px;border:4px solid #fff;box-shadow:0 6px 0 var(--pink-200);margin:0 auto 14px}
+  .qphoto{display:block;width:100%;max-height:260px;object-fit:cover;object-position:center 30%;border-radius:20px;border:4px solid #fff;box-shadow:0 6px 0 var(--pink-200);margin:0 auto 14px}
   .achs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}
   .ach{background:var(--pink-100);border-radius:14px;padding:8px 4px;opacity:.55;font-size:1.6rem;text-align:center}
   .ach.on{background:#fff;opacity:1;box-shadow:0 3px 0 var(--pink-300)}
@@ -359,11 +359,10 @@ const QUESTIONS = [
     ok:"Ти знаєш мене як справжній попутник 🧭", no:"Ще багато подорожей, щоб вивчити мене краще 😄" },
 
   /* 18. Заповни пропуски — подорож */
-  { id:"q18", type:"fill", emoji:"✈️", q:"Наша мрія про подорож",
-    text:"Ми мрієм поїхати до {0} і привезти звідти {1}.",
-    blanks:[ {options:["[Країна/місто]","На Місяць","До бабусі","В Антарктиду"],answer:"[Країна/місто]"},
-             {options:["[Сувенір]","Валізу пісків","Пінгвіна","Борщ"],answer:"[Сувенір]"} ],
-    ok:"Збираємо чемодани! 🧳", no:"Ну вже й мрійники ми, видно 🌍" },
+  { id:"q18", emoji:"🥪", photo:"photos/trip1.jpg",
+    q:"У нашу першу подорож дідусь завернув нам бутерброди у пачку з-під чипсів. Який це був смак?",
+    options:["Бекон","Сметана зелень","Паприка","Сир","Реберця гриль"],
+    ok:"Смак, який ми не забудемо! 🥪", no:"Той бутерброд був особливий, мав би запам'ятатись 😄" },
 
   /* ====== Нові питання (заглушки — заміни на свої) ====== */
   { id:"n1", emoji:"💬", q:"Яке слово я написав(ла) тобі в першому повідомленні?",
