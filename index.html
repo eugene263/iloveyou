@@ -434,9 +434,9 @@ const QUESTIONS = [
     ],
     ok:"Подорожнику, ти все знаєш! 🧭", no:"Ми ще багато де потрапимо разом 🌍" },
 
-  { id:"n13", type:"slider", emoji:"🌍", q:"Наскільки ми мрієм про…? (±10)",
-    tolerance:10,
-    items:[ { emoji:"🏖️", label:"Море", answer:90 }, { emoji:"⛰️", label:"Гори", answer:55 }, { emoji:"🏙️", label:"Велике місто", answer:40 } ],
+  { id:"n13", type:"order", emoji:"🌍", q:"Куди ми мріємо поїхати наступним, на мою думку?",
+    hint:"Розстав варіанти стрілками ▲▼ від найбільшої мрії до найменшої",
+    items:["🏖️ Італія на море","🌊 Португалія (океан)","🏰 Франція (Діснейленд)","🐪 Єгипет (на місяць у січні)","⛰️ Грузія в гори (курорт)"],
     ok:"Квитки вже в корзині 🛒", no:"Ну ж бо, ми це обговорювали 😅" },
 
   { id:"n14", type:"fill", emoji:"🏡", q:"Наше майбутнє",
@@ -1214,7 +1214,7 @@ function orderScreen(Q){
     [...box.children].forEach((r,i)=>r.classList.add(list[i]===Q.items[i]?'ok':'no'));
     resolve(Q,hits/list.length,fb,{answer:Q.items.join(' → '),detail:`На місці: ${hits}/${list.length}. Правильно: ${Q.items.join(' → ')}`});
   });
-  shell(Q, el('p',{class:'center',style:'font-size:.9rem',text:'Стрілками ▲▼ розстав події від найпершої до найпізнішої'}), box, check, fb);
+  shell(Q, el('p',{class:'center',style:'font-size:.9rem',text:Q.hint||'Стрілками ▲▼ розстав події від найпершої до найпізнішої'}), box, check, fb);
 }
 
 /* --- 👉👈 правда/міф: Q.cards = [{t:"…", a:true|false}] --- */
