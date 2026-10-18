@@ -681,7 +681,7 @@ const WORLD = [
   { name:"Моніплод", emoji:"🐱", color:"#ffb36b", text:"Наш кіт",
     levels:["m1","m2","g:cat","m3","m4","m5","g:paws","m6","m7","g:laser"] },
   { name:"Смаки та звички",  emoji:"🍕", color:"#ffd166", text:"Що ми любимо (і що нас бісить)",
-    levels:["q7","q8","g:sushi","q9","q11","g:wheel","q12","n8","q13","g:paws"] },
+    levels:["q7","q8","g:findcat","q9","q11","g:wheel","q12","n8","q13","g:paws"] },
   { name:"Подорожі та мрії", emoji:"✈️", color:"#7ad0ff", text:"Куди ми вже їздили й куди мрієм",
     levels:["q18","n9","g:chicken","n10","n11","g:hearts","n12","n13","q17","g:sushi"] },
   { name:"Наші перемоги й рекорди", emoji:"🏆", color:"#c9a0ff", text:"Досягнення, рекорди й найсмішніші моменти",
@@ -690,7 +690,7 @@ const WORLD = [
 const LOC_BONUS = 200;
 /* 🔓 Режим тестування: true = будь-яка локація відкрита й можна переграти пройдену. ПЕРЕД ПОДАРУНКОМ постав false! */
 const DEV_UNLOCK_ALL = true;
-const GAME_BY = { laser:()=>gameLaser, cat:()=>gameCat, chicken:()=>gameChicken, hearts:()=>gameHearts, sushi:()=>gameSushi, kiss:()=>gameKiss, paws:()=>gamePaws, memory:()=>gameMemory, wheel:()=>gameWheel };
+const GAME_BY = { findcat:()=>gameFindCat, laser:()=>gameLaser, cat:()=>gameCat, chicken:()=>gameChicken, hearts:()=>gameHearts, sushi:()=>gameSushi, kiss:()=>gameKiss, paws:()=>gamePaws, memory:()=>gameMemory, wheel:()=>gameWheel };
 
 /* ---- збереження ---- */
 const SAVE_KEY='iloveyou-save-v1';
@@ -1845,6 +1845,53 @@ function gameLaser(done){
   countdown(12,t=>tm.textContent=`⏱ ${t}`,end);
 }
 gameLaser.intro=go=>introCard('🔴','Лови лазерну точку','Червона точка бігає по екрану, а кіт за нею стежить. Ловити треба тапом, 12 секунд. Чим більше піймано, тим більше очок.',go);
+
+/* ---------- 🔎 Знайди кота: на фото непомітно заховані 5 котів ---------- */
+const FINDCAT = {
+  image:"photos/bear.jpg", time:60,
+  /* x,y — центр кота (% ширини / висоти фото), s — розмір (% ширини), show — яка частина кота видна (0..1, решта «за предметом») */
+  cats:[
+    { src:"photos/cat/cat1.png", x:18, y:67, s:11, show:.55 },   /* виглядає з-за колод ліворуч */
+    { src:"photos/cat/cat2.png", x:87, y:11, s:8,  show:.6  },   /* між камінням угорі справа */
+    { src:"photos/cat/cat3.png", x:30, y:84, s:7,  show:.6  },   /* у кущику внизу */
+    { src:"photos/cat/cat4.png", x:43, y:19, s:6,  show:.7  },   /* за ґратами навколо дерева */
+    { src:"photos/cat/cat5.png", x:85, y:50, s:7,  show:.5  }    /* за великою колодою справа */
+  ]
+};
+function gameFindCat(done){
+  const C=FINDCAT, found=new Set(); let over=false, ready=false, W=1, H=1, left=C.time, miss=0;
+  const cv=el('canvas',{class:'dcv fcv'}), wrap=el('div',{class:'dwrap fwrap'},cv);
+  const info=el('p',{class:'timer'}), upd=()=>{ info.textContent=`🐱 ${found.size}/${C.cats.length} • ⏱ ${left} • промахи: ${miss}`; }; upd();
+  const photo=new Image(), imgs=C.cats.map(c=>{ const i=new Image(); i.src=c.src; return i; });
+  let loaded=0; const onl=()=>{ if(++loaded===C.cats.length+1){ W=photo.naturalWidth; H=photo.naturalHeight; cv.width=W; cv.height=H; ready=true; draw(); } };
+  photo.onload=onl; imgs.forEach(i=>i.onload=onl); photo.src=C.image;
+  function draw(){
+    const c=cv.getContext('2d'); c.clearRect(0,0,W,H); c.drawImage(photo,0,0,W,H);
+    C.cats.forEach((k,i)=>{ const im=imgs[i], w=W*k.s/100, h=w*im.naturalHeight/im.naturalWidth, x=W*k.x/100-w/2, y=H*k.y/100-h/2;
+      c.save();
+      if(found.has(i)){ c.globalAlpha=1; c.drawImage(im,x-w*.1,y-h*.1,w*1.2,h*1.2); }
+      else { c.beginPath(); c.rect(x-2,y-2,w+4,h*k.show+2); c.clip(); c.globalCompositeOperation='multiply'; c.globalAlpha=.9; c.drawImage(im,x,y,w,h); }
+      c.restore(); });
+  }
+  function ring(k,cls){ const m=el('div',{class:'dmark'+(cls?' '+cls:'')}); m.style.left=k.x+'%'; m.style.top=k.y+'%'; m.style.width=(Math.max(k.s*1.8,11))+'%'; wrap.append(m); return m; }
+  wrap.addEventListener('pointerdown',e=>{
+    e.preventDefault(); if(over||!ready) return; const r=wrap.getBoundingClientRect(), px=(e.clientX-r.left)/r.width*100, py=(e.clientY-r.top)/r.height*100;
+    const hit=C.cats.findIndex((k,i)=>!found.has(i)&&Math.hypot(px-k.x,(py-k.y)*(H/W))<=Math.max(k.s*.75,6));
+    if(hit>=0){ found.add(hit); ring(C.cats[hit]); draw(); vibrate(25); upd(); if(found.size===C.cats.length) end(); }
+    else { miss++; vibrate([30,20,30]); const m=el('div',{class:'dmiss',text:'❌'}); m.style.left=px+'%'; m.style.top=py+'%'; wrap.append(m); setTimeout(()=>m.remove(),600); upd(); }
+  });
+  const stop=countdown(C.time,t=>{ left=t; upd(); },()=>end());
+  function end(){ if(over) return; over=true; C.cats.forEach((k,i)=>{ if(!found.has(i)) ring(k,'rev'); });
+    const n=found.size, pts=Math.max(0,Math.min(150,n*30-Math.floor(miss/3)*5));
+    later(()=>done(pts, n===C.cats.length?'Усі коти знайдені! 🐱':n>0?`Знайдено ${n} з ${C.cats.length} котів.`:'Жодного кота не знайдено.', 'photos/cat/cat'+(Math.min(5,Math.max(1,n))) +'.png'),1200); }
+  const hintBtn=el('button',{class:'hint',text:`💡 Підказка (${state.hints})`});
+  if(!state.hints) hintBtn.disabled=true;
+  hintBtn.addEventListener('click',()=>{ if(over||!state.hints) return; const i=C.cats.findIndex((_,k)=>!found.has(k)); if(i<0) return;
+    state.hints--; hintBtn.textContent=`💡 Підказка (${state.hints})`; if(!state.hints) hintBtn.disabled=true;
+    const m=ring(C.cats[i],'hint'); setTimeout(()=>m.remove(),1800); });
+  playCard('Знайди котів!', el('p',{text:`На фото непомітно сховались ${C.cats.length} котів. Знайди їх усіх за ${C.time} секунд, тапай по кожному.`}), el('div',{class:'game-box'},info,wrap), hintBtn);
+}
+gameFindCat.intro=go=>introCard('🔎','Знайди котів','На фото сховались п\'ять котів, дуже непомітно: за колодами, камінням, у траві. Знайди всіх за хвилину!',go);
 
 startScreen();
 </script>
