@@ -692,12 +692,12 @@ const WORLD = [
   { name:"Подорожі та мрії", emoji:"✈️", color:"#7ad0ff", text:"Куди ми вже їздили й куди мрієм",
     levels:["q18","n9","g:chicken","n10","n11","g:hearts","n12","n13","q17","g:sushi"] },
   { name:"Наші перемоги й рекорди", emoji:"🏆", color:"#c9a0ff", text:"Досягнення, рекорди й найсмішніші моменти",
-    levels:["w1","w2","g:chicken","w3","w4","q15","g:whack","w5","q16","boss"] }
+    levels:["w1","w2","g:snake","w3","w4","q15","g:whack","w5","q16","boss"] }
 ];
 const LOC_BONUS = 200;
 /* 🔓 Режим тестування: true = будь-яка локація відкрита й можна переграти пройдену. ПЕРЕД ПОДАРУНКОМ постав false! */
 const DEV_UNLOCK_ALL = true;
-const GAME_BY = { findcat:()=>gameFindCat, laser:()=>gameLaser, cat:()=>gameCat, chicken:()=>gameChicken, hearts:()=>gameHearts, sushi:()=>gameSushi, kiss:()=>gameKiss, paws:()=>gamePaws, memory:()=>gameMemory, whack:()=>gameWhack, wheel:()=>gameWheel };
+const GAME_BY = { findcat:()=>gameFindCat, laser:()=>gameLaser, cat:()=>gameCat, chicken:()=>gameChicken, hearts:()=>gameHearts, sushi:()=>gameSushi, kiss:()=>gameKiss, paws:()=>gamePaws, memory:()=>gameMemory, whack:()=>gameWhack, snake:()=>gameSnake, wheel:()=>gameWheel };
 
 /* ---- збереження ---- */
 const SAVE_KEY='iloveyou-save-v1';
@@ -1274,6 +1274,48 @@ function gameWhack(done){
   countdown(15,t=>tm.textContent=`⏱ ${t}`,end);
 }
 gameWhack.intro = go => introCard('🔨','Рекордна лунка','З лунок вистрибують кроти. Тапай по них якнайшвидше, а бомби (💣) не чіпай. Час: 15 секунд.',go);
+
+/* Змійка — Моня збирає рибок */
+function gameSnake(done){
+  const N=14, CELL=24, GOAL=10; let over=false, fish=0;
+  const cv=el('canvas',{width:N*CELL,height:N*CELL,style:'display:block;margin:0 auto;background:#ffe9f3;border-radius:14px;max-width:100%;touch-action:none'});
+  const c=cv.getContext('2d'), sc=el('div',{class:'timer',text:`🐟 0/${GOAL}`}), tm=el('div',{class:'timer'});
+  let snake=[{x:4,y:7},{x:3,y:7},{x:2,y:7}], dir={x:1,y:0}, next={x:1,y:0}, food=null;
+  const placeFood=()=>{ do{ food={x:Math.floor(Math.random()*N),y:Math.floor(Math.random()*N)}; }while(snake.some(p=>p.x===food.x&&p.y===food.y)); };
+  placeFood();
+  const draw=()=>{
+    c.clearRect(0,0,cv.width,cv.height);
+    c.font=(CELL-4)+'px serif'; c.textAlign='center'; c.textBaseline='middle';
+    c.fillText('🐟',food.x*CELL+CELL/2,food.y*CELL+CELL/2+1);
+    snake.forEach((p,i)=>{ if(i===0){ c.fillText('🐱',p.x*CELL+CELL/2,p.y*CELL+CELL/2+1); } else { c.fillStyle=i%2?'#ff74ad':'#ff9ec7'; c.beginPath(); c.arc(p.x*CELL+CELL/2,p.y*CELL+CELL/2,CELL/2-3,0,7); c.fill(); } });
+  };
+  const finish=(crash)=>{
+    if(over) return; over=true;
+    done(Math.min(150,fish*15), fish>=GOAL?'Усіх рибок зібрано!':crash?`Моня врізалась. Рибок: ${fish}.`:`Час вийшов. Рибок: ${fish}.`);
+  };
+  const step=()=>{
+    if(over) return; dir=next;
+    const h={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+    if(h.x<0||h.y<0||h.x>=N||h.y>=N||snake.some(p=>p.x===h.x&&p.y===h.y)){ vibrate([40,30,40]); draw(); return finish(true); }
+    snake.unshift(h);
+    if(h.x===food.x&&h.y===food.y){ fish++; sc.textContent=`🐟 ${fish}/${GOAL}`; vibrate(10); if(fish>=GOAL){ draw(); return finish(false); } placeFood(); } else snake.pop();
+    draw();
+  };
+  const turn=(x,y)=>{ if(x===-dir.x&&y===-dir.y) return; next={x,y}; };
+  const id=setInterval(step,170); onCleanup(()=>clearInterval(id)); draw();
+  const key=e=>{ const m={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],KeyW:[0,-1],KeyS:[0,1],KeyA:[-1,0],KeyD:[1,0]}[e.code]; if(m){ e.preventDefault(); turn(...m); } };
+  document.addEventListener('keydown',key); onCleanup(()=>document.removeEventListener('keydown',key));
+  let sx=0,sy=0;
+  cv.addEventListener('pointerdown',e=>{ sx=e.clientX; sy=e.clientY; });
+  cv.addEventListener('pointerup',e=>{ const dx=e.clientX-sx, dy=e.clientY-sy; if(Math.max(Math.abs(dx),Math.abs(dy))<20) return; if(Math.abs(dx)>Math.abs(dy)) turn(dx>0?1:-1,0); else turn(0,dy>0?1:-1); });
+  const pad=(t,x,y)=>el('button',{class:'btn ghost',style:'margin:0;padding:10px 0;width:100%',text:t,onclick:()=>turn(x,y)});
+  playCard('Змійка: Моня і рибки',
+    el('p',{text:`Збери ${GOAL} рибок 🐟 за 45 секунд. Стрілки, свайп або кнопки. Не врізайся в стіни та власний хвіст!`}),
+    el('div',{class:'game-box'},sc,tm,cv),
+    el('div',{style:'display:grid;grid-template-columns:repeat(3,64px);gap:6px;justify-content:center'},el('span'),pad('⬆️',0,-1),el('span'),pad('⬅️',-1,0),pad('⬇️',0,1),pad('➡️',1,0)));
+  countdown(45,t=>tm.textContent=`⏱ ${t}`,()=>finish(false));
+}
+gameSnake.intro = go => introCard('🐍','Змійка: Моня і рибки','Моня росте з кожною рибкою. Керуй стрілками, свайпом або кнопками. Збери 10 рибок за 45 секунд і не врізайся!',go);
 
 /* 4) Мемо-карточки */
 function gameMemory(done){
