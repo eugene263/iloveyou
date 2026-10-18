@@ -250,6 +250,7 @@
 .fishwrap{position:relative}
   .fishdrop{position:absolute;font-size:2rem;line-height:1;pointer-events:none;z-index:5;opacity:0;animation:fishup .55s ease-out forwards}
   @keyframes fishup{0%{opacity:1;transform:translate(0,0) scale(.8) rotate(0)}85%{opacity:1}100%{opacity:0;transform:translate(var(--dx,0),var(--dy,-200px)) scale(1.1) rotate(var(--r,0deg))}}
+.big-emoji.long{font-size:2.5rem;line-height:1.25;letter-spacing:.04em;animation:none}
 </style>
 </head>
 <body>
@@ -331,10 +332,10 @@ const QUESTIONS = [
     ok:"Ну звісно ти знаєш, це ж ТВІЙ телефон 😄", no:"Ну ти ж знаєш... перевір контакти 📞" },
 
   /* 10. Заповни пропуски: {0},{1} — місця, blanks[i].answer — правильне слово */
-  { id:"q10", emoji:"👀☕😳", q:"Який момент нашої першої зустрічі зашифровано цими емодзі?",
-    /* Перший варіант — правильний. Емодзі-підказку (emoji) і варіанти заміни на свої. */
-    options:["[Справжній момент]","Перший погляд через усю кав'ярню","Ми разом чекали на ліфт","Перша спільна сміхота"],
-    ok:"Розшифрувала! Агент Кохання 007 🕵️‍♀️", no:"Ну ти ж мала знати, це наш момент 😄" },
+  { id:"q10", emoji:"🎄⛰️🏊🎡🍄🏨🎂", q:"Яку нашу історію зашифровано цими емодзі?",
+    /* Перший варіант — правильний. Заміни його на справжню відповідь (і 3 хибні на свої). */
+    options:["[Правильна відповідь]","Наша перша зустріч","Наш перший Новий рік","День народження друзів"],
+    ok:"Розшифрувала! Агент Кохання 007 🕵️‍♀️", no:"Ну ти ж мала знати, це наша історія 😄" },
 
   /* 11. Звичайний вибір */
   { id:"q11", emoji:"🎵", q:"Яка наша пісня?",
@@ -887,7 +888,7 @@ function sliderScreen(Q){
       el('button',{class:'btn',style:'margin-top:14px',text: state.lives<=0 ? '💔 Серця закінчились…' : 'Далі ➡️',onclick: state.lives<=0 ? reviveScreen : afterQuestion}));
   });
   render(el('div',{class:'card'}, ...hud(),
-    el('span',{class:'big-emoji',text:Q.emoji}),
+    emojiEl(Q),
     el('h2',{text:Q.q}),
     el('p',{class:'center',style:'font-size:.9rem',text:'Посунь повзунки туди, де, на твою думку, мій відсоток любові 👇'}),
     ...rows.map(r=>r.node), check, fb));
@@ -933,7 +934,7 @@ function questionScreen(Q){
   }
 
   render(el('div',{class:'card'}, ...hud(),
-    Q.photo ? el('img',{class:'qphoto',src:Q.photo,alt:''}) : el('span',{class:'big-emoji',text:Q.emoji}),
+    Q.photo ? el('img',{class:'qphoto',src:Q.photo,alt:''}) : emojiEl(Q),
     el('h2',{text:Q.q}), ...btns, hintBtn, fb));
 }
 
@@ -1211,9 +1212,10 @@ gameMemory.intro = go => introCard('🃏','Знайди пари!','12 карт�
    fill   — заповни пропуски      | map   — тапни на карті
    pixel  — піксельне фото
    ===================================================================== */
+const emojiEl = Q => el('span',{class:'big-emoji'+(Array.from(Q.emoji).filter(c=>c!=='\uFE0F'&&c!=='\u200D').length>4?' long':''),text:Q.emoji});
 function shell(Q, ...kids){
   render(el('div',{class:'card'}, ...hud(),
-    Q.photo ? el('img',{class:'qphoto',src:Q.photo,alt:''}) : el('span',{class:'big-emoji',text:Q.emoji}),
+    Q.photo ? el('img',{class:'qphoto',src:Q.photo,alt:''}) : emojiEl(Q),
     el('h2',{text:Q.q}), ...kids));
 }
 /* спільне підбиття підсумку: ratio 0..1 */
