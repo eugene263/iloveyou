@@ -251,6 +251,8 @@
   .fishdrop{position:absolute;font-size:2rem;line-height:1;pointer-events:none;z-index:5;opacity:0;animation:fishup .55s ease-out forwards}
   @keyframes fishup{0%{opacity:1;transform:translate(0,0) scale(.8) rotate(0)}85%{opacity:1}100%{opacity:0;transform:translate(var(--dx,0),var(--dy,-200px)) scale(1.1) rotate(var(--r,0deg))}}
 .big-emoji.long{font-size:2.5rem;line-height:1.25;letter-spacing:.04em;animation:none}
+.spotwrap{touch-action:none;cursor:grab}
+  .spotdark{position:absolute;inset:0;width:100%;height:100%;transition:opacity .8s}.spotdark.gone{opacity:0}
 </style>
 </head>
 <body>
@@ -275,9 +277,11 @@ const QUESTIONS = [
      Усі тексти й відповіді в [дужках] — заглушки, заміни на справжні. */
 
   /* 1. Вибір (перший варіант — правильний) */
-  { id:"q1", emoji:"👀", q:"Де ми вперше з'явились в житті одне одного?",
-    options:["Комсомольське озеро","Кавʼярня","Вулиця","Лавочка","Коломия"],
-    ok:"Це ж початок нашої історії! 🥹", no:"Ну як так, це ж найперший рівень гри! 🙈" },
+  { id:"q1", type:"spot", emoji:"🔦", q:"Що (і де) на цьому фото? Відкривай по шматочку",
+    image:"photos/daisy.jpg",
+    /* Перший варіант — правильний. Питання й варіанти заміни на свої (наприклад, «Де ми це фотографували?») */
+    options:["Ромашка на тлі гір","Кульбаба на полі","Польова трава біля озера","Ялинка в лісі"],
+    ok:"Впізнала з першого погляду! 🌼", no:"Ще трохи світла — і було б видно 🔦" },
 
   /* 2. Хто з нас? answer: "me" = я, "you" = вона */
   { id:"q2", type:"who", emoji:"💬", q:"Хто з нас першим написав повідомлення?",
@@ -377,9 +381,9 @@ const QUESTIONS = [
     ok:"Смак, який ми не забудемо! 🥪", no:"Той бутерброд був особливий, мав би запам'ятатись 😄" },
 
   /* ====== Нові питання (заглушки — заміни на свої) ====== */
-  { id:"n1", emoji:"💬", q:"Яке слово я написав(ла) тобі в першому повідомленні?",
-    options:["[Слово]","Привіт","Здоровенькі були","Ку-ку"],
-    ok:"Така пам'ять — на вагу золота 🥇", no:"Ну, це було давно 😅" },
+  { id:"n1", emoji:"👀", q:"Де ми вперше з'явились в житті одне одного?",
+    options:["Комсомольське озеро","Кавʼярня","Вулиця","Лавочка","Коломия"],
+    ok:"Це ж початок нашої історії! 🥹", no:"Ну як так, це ж найперший рівень гри! 🙈" },
 
   { id:"n2", type:"slider", emoji:"👁️", q:"Наскільки мені в тобі подобається…? (±10)",
     tolerance:10,
@@ -1429,6 +1433,42 @@ function diffScreen(Q){
   shell(Q, el('p',{class:'center',style:'font-size:.9rem',text:`Знайди ${N} відмінностей між двома фото. Тапай по місцю різниці на будь-якому з них.`}), info, wA, wB, hintBtn, giveBtn, fb);
 }
 TYPES.diff=diffScreen;
+
+/* --- 🔦 прожектор: фото закрите темрявою, відкривається пальцем ---
+   Q.image — фото; Q.options — варіанти (перший правильний); чим менше відкрито, тим більше очок */
+function spotScreen(Q){
+  state.answered=false; const fb=el('div'); let W=1,H=1,ready=false,moves=0,rev=0;
+  const base=el('canvas',{class:'dcv'}), dark=el('canvas',{class:'spotdark'});
+  const wrap=el('div',{class:'dwrap spotwrap'},base,dark);
+  const info=el('p',{class:'timer',text:'🔦 Води пальцем по фото'});
+  const img=new Image();
+  img.onload=()=>{ W=img.naturalWidth; H=img.naturalHeight; base.width=dark.width=W; base.height=dark.height=H;
+    base.getContext('2d').drawImage(img,0,0);
+    const d=dark.getContext('2d'); d.fillStyle='#1d0f1f'; d.fillRect(0,0,W,H);
+    d.fillStyle='#ffffff55'; d.font=`700 ${W*0.05}px Fredoka,sans-serif`; d.textAlign='center'; d.fillText('води пальцем 👆',W/2,H/2); ready=true; };
+  img.src=Q.image;
+  function reveal(e){
+    if(!ready||state.answered) return; const r=wrap.getBoundingClientRect(); const x=(e.clientX-r.left)/r.width*W, y=(e.clientY-r.top)/r.height*H, R=W*0.11;
+    const d=dark.getContext('2d'); d.globalCompositeOperation='destination-out';
+    const g=d.createRadialGradient(x,y,R*.35,x,y,R); g.addColorStop(0,'rgba(0,0,0,1)'); g.addColorStop(1,'rgba(0,0,0,0)'); d.fillStyle=g; d.beginPath(); d.arc(x,y,R,0,7); d.fill();
+    if(++moves%6===0) measure(); }
+  function measure(){ const d=dark.getContext('2d'), data=d.getImageData(0,0,W,H).data; let t=0,c=0, step=Math.max(8,Math.floor(W/60))*4;
+    for(let yy=0;yy<H;yy+=step/4*1) for(let xx=0;xx<W;xx+=step/4){ t++; if(data[(yy*W+xx)*4+3]<60) c++; } rev=c/t; info.textContent=`🔦 Відкрито: ${Math.round(rev*100)}%`; }
+  let down=false;
+  wrap.addEventListener('pointerdown',e=>{ e.preventDefault(); down=true; wrap.setPointerCapture(e.pointerId); reveal(e); });
+  wrap.addEventListener('pointermove',e=>{ if(down) reveal(e); });
+  wrap.addEventListener('pointerup',()=>{ down=false; measure(); });
+  const correct=Q.options[0];
+  const btns=shuffle(Q.options).map(o=>{ const b=el('button',{class:'opt',text:o});
+    b.addEventListener('click',()=>{ if(state.answered) return; measure();
+      btns.forEach(x=>{x.disabled=true; if(x.textContent===correct) x.classList.add('correct');});
+      const ok=o===correct; if(!ok) b.classList.add('wrong'); dark.classList.add('gone');
+      resolve(Q,ok?1:0,fb,{gain: ok ? Math.round(POINTS*(1-.4*Math.min(1,rev)))+(state.streak>0?STREAK_BONUS*state.streak:0) : 0, answer:correct, detail: ok?`Відкрито ${Math.round(rev*100)}% фото`:''}); });
+    return b; });
+  shell(Q, el('p',{class:'center',style:'font-size:.9rem',text:'Фото закрите темрявою. Води пальцем (чи мишкою), щоб відкривати ділянки. Чим менше відкриєш, тим більше очок!'}), info, wrap, ...btns, fb);
+}
+TYPES.spot=spotScreen;
+
 
 /* --- 🎡 колесо фортуни (міні-гра). WHEEL — призи/завдання, редагуй --- */
 const WHEEL=["🤗 Обійми без ліміту","🍫 Шоколадка","😘 Поцілунок","💆 Масаж 10 хв","🍕 Піца за мій рахунок","🎬 Ти обираєш фільм","🌹 Квіти","🥰 Комплімент ×3"];
