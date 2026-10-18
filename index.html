@@ -247,6 +247,8 @@
   @keyframes fadeout{to{opacity:0;transform:translate(-50%,-90%)}}
 .catpng{display:block;margin:0 auto 12px;max-height:190px;max-width:75%;width:auto;height:auto;object-fit:contain;
     filter:drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff) drop-shadow(0 10px 10px #f0509a55);animation:bob 2.4s ease-in-out infinite}
+.fishdrop{position:absolute;top:0;left:calc(50% + var(--dx,0px));font-size:2rem;pointer-events:none;z-index:3;opacity:0;animation:fishfall .6s ease-in forwards}
+  @keyframes fishfall{0%{opacity:1;transform:translateY(-6px) rotate(var(--r,0deg))}80%{opacity:1}100%{opacity:0;transform:translateY(150px) rotate(calc(var(--r,0deg)*2))}}
 </style>
 </head>
 <body>
@@ -1032,18 +1034,18 @@ function afterQuestion(){ levelDone(); }
 /* shell: intro -> play -> result */
 function gameIntro(run, revive){
   run.intro(() => {
-    const done = (pts, msg) => {
+    const done = (pts, msg, img) => {
       stopGame();
       if(revive){
         if(pts>=60){ state.lives=1; award('survivor'); confetti(60);
-          return render(el('div',{class:'card center'},el('span',{class:'big-emoji',text:'❤️‍🩹'}),el('h2',{text:'Ти повернулась! +1 ❤️'}),el('p',{text:msg}),
+          return render(el('div',{class:'card center'},(img?el('img',{class:'catpng',src:img,alt:'кіт'}):el('span',{class:'big-emoji',text:'❤️‍🩹'})),el('h2',{text:'Ти повернулась! +1 ❤️'}),el('p',{text:msg}),
             el('button',{class:'btn',text:'Продовжуємо ➡️',onclick:levelDone}))); }
-        return render(el('div',{class:'card center'},el('span',{class:'big-emoji',text:'😿'}),el('h2',{text:'Котик ще голодний…'}),el('p',{text:msg}),
+        return render(el('div',{class:'card center'},(img?el('img',{class:'catpng',src:img,alt:'кіт'}):el('span',{class:'big-emoji',text:'😿'})),el('h2',{text:'Котик ще голодний…'}),el('p',{text:msg}),
           el('button',{class:'btn',text:'Ще раз! 🔁',onclick:()=>gameIntro(gameCat,true)})));
       }
       state.score += pts; state.lastStars=pts>=100?3:pts>=50?2:1; if(pts>=100) confetti(40); vibrate(40);
       render(el('div',{class:'card center'},
-        el('span',{class:'big-emoji',text:pts>=100?'🎉':'👍'}),
+        img?el('img',{class:'catpng',src:img,alt:'кіт'}):el('span',{class:'big-emoji',text:pts>=100?'🎉':'👍'}),
         el('h2',{text:`Міні-гра пройдена! +${pts} ⭐`}),
         el('p',{text:msg}),
         el('button',{class:'btn',text:'Далі ➡️',onclick:levelDone})));
@@ -1078,20 +1080,25 @@ function gameCat(done){
     const ns=Math.min(4,Math.floor(n/GOAL*5));
     if(ns!==stage){ stage=ns; catPic.src=catSrc(stage); }
     cat.classList.add('bump'); setTimeout(()=>cat.classList.remove('bump'),80);
-    vibrate(8);
+    dropFish(1); vibrate(8);
     if(n>=GOAL){ award('cat'); end(); }
   };
+  const box=el('div',{class:'game-box'},cat,el('div',{class:'meter'},m),tm);
+  function dropFish(k){ for(let i=0;i<k;i++){ const f=el('span',{class:'fishdrop',text:pick(['🐟','🐟','🐠','🐟','🍣'])});
+    f.style.setProperty('--dx',(Math.random()*120-60)+'px'); f.style.setProperty('--r',(Math.random()*80-40)+'deg'); f.style.animationDelay=(i*60)+'ms';
+    box.append(f); setTimeout(()=>f.remove(),900+i*60); } }
   const key=e=>{ if(e.code==='Space'){e.preventDefault(); if(!e.repeat) press();} };
   document.addEventListener('keydown',key); onCleanup(()=>document.removeEventListener('keydown',key));
   const btn=el('button',{class:'btn',text:'🐟 ГОДУЙ! 🐟',onclick:press});
   function end(){
     if(over) return; over=true;
-    const pts=Math.min(150,Math.round(n/GOAL*150));
-    done(pts, n>=GOAL ? 'Котик наїдений і щасливий! Муррр 😻' : n>=GOAL/2 ? `Котик частково наїдений (${n} рибок). Лишився трохи голодний 😺` : `Котик ображений: лише ${n} рибок 😿`);
+    const pts=Math.min(150,Math.round(n/GOAL*150)), win=n>=GOAL;
+    const finish=()=>done(pts, win ? 'Котик наїдений і щасливий! Муррр 😻' : n>=GOAL/2 ? `Котик частково наїдений (${n} рибок). Лишився трохи голодний 😺` : `Котик ображений: лише ${n} рибок 😿`, catSrc(win?4:stage));
+    if(win){ catPic.src=catSrc(4); dropFish(14); confetti(30); later(finish,1500); } else finish();
   }
   playCard('Нагодуй голодного котика!',
     el('p',{},'Швидко клацай ',el('span',{class:'kbd',text:'ПРОБІЛ'}),' (або тапай по кнопці) — за 7 секунд!'),
-    el('div',{class:'game-box'},cat,el('div',{class:'meter'},m),tm), btn);
+    box, btn);
   countdown(7,t=>tm.textContent=`⏱ ${t}`,end);
 }
 gameCat.intro = go => introCard('🐱','Нагодуй котика!','Котик дуже голодний. Клацай ПРОБІЛ (на телефоні — тапай по кнопці) якомога швидше, поки не закінчився час.',go);
