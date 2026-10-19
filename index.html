@@ -700,9 +700,9 @@ const WORLD = [
   { name:"Наші перемоги й рекорди", emoji:"🏆", color:"#c9a0ff", text:"Досягнення, рекорди й найсмішніші моменти",
     levels:["w1","w2","g:snake","w3","w4","q15","g:whack","w5","q16","boss"] }
 ];
-const LOC_BONUS = 150;
+const LOC_BONUS = 150, LEVEL_BASE = 45, GUARANTEE = 5200;
 /* 🔓 Режим тестування: true = будь-яка локація відкрита й можна переграти пройдену. ПЕРЕД ПОДАРУНКОМ постав false! */
-const DEV_UNLOCK_ALL = true;
+const DEV_UNLOCK_ALL = false;
 const GAME_BY = { findcat:()=>gameFindCat, laser:()=>gameLaser, cat:()=>gameCat, chicken:()=>gameChicken, hearts:()=>gameHearts, sushi:()=>gameSushi, kiss:()=>gameKiss, paws:()=>gamePaws, memory:()=>gameMemory, whack:()=>gameWhack, snake:()=>gameSnake, wheel:()=>gameWheel };
 
 /* ---- збереження ---- */
@@ -864,6 +864,7 @@ function startLevel(li,k){
 function levelDone(){
   stopGame();
   const li=state.loc,k=state.lv,key=li+'-'+k, wasFull=locProgress(li)===WORLD[li].levels.length;
+  if(!state.done[key]) state.score += LEVEL_BASE;
   state.done[key]=Math.max(state.done[key]||0,state.lastStars||1);
   saveGame();
   if(WORLD[li].levels[k]==='boss') return resultScreen();
@@ -1029,7 +1030,7 @@ function bossScreen(){
   no.addEventListener('touchstart',flee,{passive:false});
   no.addEventListener('click',flee);
   yes.addEventListener('click',()=>{
-    state.score += 350; state.streak++; state.log.push({q:BOSS.q,right:true,answer:'Так 🎁'});
+    state.score += 350; if(state.score<GUARANTEE) state.score=GUARANTEE; state.streak++; state.log.push({q:BOSS.q,right:true,answer:'Так 🎁'});
     state.lastStars=3; confetti(120); vibrate([40,30,40,30,80]); levelDone();
   });
   arena.append(yes,no);
@@ -1308,7 +1309,7 @@ function gameSnake(done){
     draw();
   };
   const turn=(x,y)=>{ if(x===-dir.x&&y===-dir.y) return; next={x,y}; };
-  const id=setInterval(step,170); onCleanup(()=>clearInterval(id)); draw();
+  let id=null; draw();
   const key=e=>{ const m={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],KeyW:[0,-1],KeyS:[0,1],KeyA:[-1,0],KeyD:[1,0]}[e.code]; if(m){ e.preventDefault(); turn(...m); } };
   document.addEventListener('keydown',key); onCleanup(()=>document.removeEventListener('keydown',key));
   let sx=0,sy=0;
@@ -1319,9 +1320,13 @@ function gameSnake(done){
     el('p',{text:`Збери ${GOAL} рибок 🐟 за 45 секунд. Стрілки, свайп або кнопки. Не врізайся в стіни та власний хвіст!`}),
     el('div',{class:'game-box'},sc,tm,cv),
     el('div',{style:'display:grid;grid-template-columns:repeat(3,64px);gap:6px;justify-content:center'},el('span'),pad('⬆️',0,-1),el('span'),pad('⬅️',-1,0),pad('⬇️',0,1),pad('➡️',1,0)));
-  countdown(45,t=>tm.textContent=`⏱ ${t}`,()=>finish(false));
+  let n3=3; tm.textContent='Старт через 3…';
+  const pre=setInterval(()=>{ n3--; if(n3>0){ tm.textContent=`Старт через ${n3}…`; return; } clearInterval(pre);
+    id=setInterval(step,170); onCleanup(()=>clearInterval(id));
+    countdown(45,t=>tm.textContent=`⏱ ${t}`,()=>finish(false)); },1000);
+  onCleanup(()=>clearInterval(pre));
 }
-gameSnake.intro = go => introCard('🐍','Змійка: Моня і рибки','Моня росте з кожною рибкою. Керуй стрілками, свайпом або кнопками. Збери 10 рибок за 45 секунд і не врізайся!',go);
+gameSnake.intro = go => introCard('🐍','Змійка: Моня і рибки','Моня 🐱 їздить по полю і збирає рибок 🐟, а за нею росте хвіст. Керуй стрілками (або WASD), свайпом по полю чи кнопками під ним. Збери 10 рибок за 45 секунд. Не врізайся в стіни та у власний хвіст. Після кнопки «Я готова» буде відлік 3-2-1.',go);
 
 /* 4) Мемо-карточки */
 function gameMemory(done){
