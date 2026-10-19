@@ -803,7 +803,7 @@ function paintWorld(c,P){
   road(c,ptsRoad);
   LANDMARKS.forEach((fn,i)=>fn(c,P[i].x,P[i].y));
   frame(c);
-  ribbon(c,1000,72,820,104,'Карта нашої історії',58);
+  ribbon(c,1000,72,820,104,'Пікмі карта',58);
   /* компас */
   c.save(); c.translate(150,250); c.fillStyle='#fff8e8'; c.strokeStyle='#a54f6a'; c.lineWidth=6; c.beginPath(); c.arc(0,0,76,0,7); c.fill(); c.stroke();
   for(let a=0;a<4;a++){ c.save(); c.rotate(a*Math.PI/2); c.fillStyle=a===0?'#e63946':'#f0509a'; c.beginPath(); c.moveTo(0,-68); c.lineTo(14,0); c.lineTo(-14,0); c.closePath(); c.fill(); c.restore(); }
