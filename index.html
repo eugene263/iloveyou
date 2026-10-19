@@ -580,8 +580,9 @@ const RANKS = [
 
 /* ===================================================================== */
 const $app = document.getElementById('app');
-const state = { name:"", i:0, deaths:0, catIdx:0, loc:0, lv:0, done:{}, lastStars:1, _s:0, lvl:new Set(), shown:0, get score(){return this._s}, set score(v){ this._s=v; checkLevels(); }, streak:0, bestStreak:0, hints:3, log:[], answered:false, lives:3, ach:new Set(), dodges:0 };
-const POINTS = 100, STREAK_BONUS = 25;
+const state = { name:"", i:0, deaths:0, catIdx:0, loc:0, lv:0, done:{}, lastStars:1, _s:0, lvl:new Set(), shown:0, get score(){return this._s}, set score(v){ this._s=Math.min(v,MAX_TOTAL); checkLevels(); }, streak:0, bestStreak:0, hints:3, log:[], answered:false, lives:3, ach:new Set(), dodges:0 };
+const POINTS = 70, STREAK_BONUS = 15, MAX_TOTAL = 8000, GAME_SCALE = .7;
+const sb = n => STREAK_BONUS*Math.min(Math.max(n,0),5);
 
 /* helpers */
 const el = (tag, props={}, ...kids) => {
@@ -694,7 +695,7 @@ const WORLD = [
   { name:"Наші перемоги й рекорди", emoji:"🏆", color:"#c9a0ff", text:"Досягнення, рекорди й найсмішніші моменти",
     levels:["w1","w2","g:snake","w3","w4","q15","g:whack","w5","q16","boss"] }
 ];
-const LOC_BONUS = 200;
+const LOC_BONUS = 150;
 /* 🔓 Режим тестування: true = будь-яка локація відкрита й можна переграти пройдену. ПЕРЕД ПОДАРУНКОМ постав false! */
 const DEV_UNLOCK_ALL = true;
 const GAME_BY = { findcat:()=>gameFindCat, laser:()=>gameLaser, cat:()=>gameCat, chicken:()=>gameChicken, hearts:()=>gameHearts, sushi:()=>gameSushi, kiss:()=>gameKiss, paws:()=>gamePaws, memory:()=>gameMemory, whack:()=>gameWhack, snake:()=>gameSnake, wheel:()=>gameWheel };
@@ -894,7 +895,7 @@ function introScreen(){
     el('h2',{text:`Привіт, ${state.name}!`}),
     el('p',{text:'Правила прості:'}),
     el('p',{text:'🗺️ 5 локацій, у кожній 10 рівнів: питання та міні-ігри'}),
-    el('p',{text:'✅ Правильна відповідь = 100 очок, серія дає бонус'}),
+    el('p',{text:'✅ Правильна відповідь = 70 очок, серія дає бонус'}),
     el('p',{text:`🎁 Набери бали до ${MAX_SCORE} і відкривай призи (${LEVELS.length} рівнів призів)`}),
     el('p',{text:'💡 У тебе 3 підказки, а ще 3 серця ❤️'}),
     el('p',{text:'💾 Прогрес зберігається автоматично'}),
@@ -942,7 +943,7 @@ function sliderScreen(Q){
       r.res.textContent = ok ? `✅ Влучила! Правильно ${a}%` : `❌ Ти: ${v}%, правильно: ${a}%`;
     });
     const isRight = hits === rows.length; state.lastStars=isRight?3:hits>0?2:1;
-    const gain = hits*PER + (isRight ? POINTS-hits*PER+ (state.streak>0?STREAK_BONUS*state.streak:0) : 0);
+    const gain = hits*PER + (isRight ? POINTS-hits*PER+ (state.streak>0?sb(state.streak):0) : 0);
     state.score += gain;
     if(isRight){ state.streak++; state.bestStreak=Math.max(state.bestStreak,state.streak); confetti(30); vibrate(30); if(state.streak>=5) award('fire'); award('slider'); }
     else { state.streak = 0; if(hits===0){ state.lives--; } vibrate([60,40,60]); }
@@ -985,7 +986,7 @@ function questionScreen(Q){
     let gain = 0;
     if(isRight){
       state.streak++; state.bestStreak=Math.max(state.bestStreak,state.streak);
-      gain = POINTS + (state.streak>1 ? STREAK_BONUS*(state.streak-1) : 0);
+      gain = POINTS + (state.streak>1 ? sb(state.streak-1) : 0);
       state.score += gain; confetti(24); vibrate(30); if(state.streak>=5) award('fire');
     } else {
       btn.classList.add('wrong'); state.streak = 0; state.lives--; vibrate([60,40,60]);
@@ -1023,7 +1024,7 @@ function bossScreen(){
   no.addEventListener('touchstart',flee,{passive:false});
   no.addEventListener('click',flee);
   yes.addEventListener('click',()=>{
-    state.score += 500; state.streak++; state.log.push({q:BOSS.q,right:true,answer:'Так 🎁'});
+    state.score += 350; state.streak++; state.log.push({q:BOSS.q,right:true,answer:'Так 🎁'});
     state.lastStars=3; confetti(120); vibrate([40,30,40,30,80]); levelDone();
   });
   arena.append(yes,no);
@@ -1109,10 +1110,10 @@ function gameIntro(run, revive){
         return render(el('div',{class:'card center'},(img?el('img',{class:'catpng',src:img,alt:'кіт'}):el('span',{class:'big-emoji',text:'😿'})),el('h2',{text:'Котик ще голодний…'}),el('p',{text:msg}),
           el('button',{class:'btn',text:'Ще раз! 🔁',onclick:()=>gameIntro(gameCat,true)})));
       }
-      state.score += pts; state.lastStars=pts>=100?3:pts>=50?2:1; if(pts>=100) confetti(40); vibrate(40);
+      const gp=Math.round(pts*GAME_SCALE); state.score += gp; state.lastStars=pts>=100?3:pts>=50?2:1; if(pts>=100) confetti(40); vibrate(40);
       render(el('div',{class:'card center'},
         img?el('img',{class:'catpng',src:img,alt:'кіт'}):el('span',{class:'big-emoji',text:pts>=100?'🎉':'👍'}),
-        el('h2',{text:`Міні-гра пройдена! +${pts} ⭐`}),
+        el('h2',{text:`Міні-гра пройдена! +${gp} ⭐`}),
         el('p',{text:msg}),
         el('button',{class:'btn',text:'Далі ➡️',onclick:levelDone})));
     };
@@ -1364,7 +1365,7 @@ function shell(Q, ...kids){
 function resolve(Q, ratio, fb, o={}){
   state.answered = true;
   const right = ratio >= .999; state.lastStars = right?3:ratio>0?2:1;
-  const gain = o.gain ?? (right ? POINTS + (state.streak>0 ? STREAK_BONUS*state.streak : 0) : Math.round(POINTS*ratio*.5));
+  const gain = o.gain ?? (right ? POINTS + (state.streak>0 ? sb(state.streak) : 0) : Math.round(POINTS*ratio*.5));
   state.score += gain;
   if(right){ state.streak++; state.bestStreak=Math.max(state.bestStreak,state.streak); confetti(30); vibrate(30); if(state.streak>=5) award('fire'); }
   else { state.streak = 0; if(ratio===0) state.lives--; vibrate([60,40,60]); }
@@ -1520,7 +1521,7 @@ function pixelScreen(Q){
       btns.forEach(x=>{x.disabled=true; if(x.textContent===correct) x.classList.add('correct');});
       const ok=o===correct; if(!ok) b.classList.add('wrong');
       const early=1-(Math.min(st0,STEPS.length-1)/(STEPS.length-1))*.5;
-      resolve(Q,ok?1:0,fb,{gain: ok ? Math.round(POINTS*early)+(state.streak>0?STREAK_BONUS*state.streak:0) : 0, answer:correct, detail: ok?`Вгадала на кроці ${st0+1}/${STEPS.length}`:''}); });
+      resolve(Q,ok?1:0,fb,{gain: ok ? Math.round(POINTS*early)+(state.streak>0?sb(state.streak):0) : 0, answer:correct, detail: ok?`Вгадала на кроці ${st0+1}/${STEPS.length}`:''}); });
     return b;});
   let st0=0; const track=setInterval(()=>{st0=st;},100); onCleanup(()=>clearInterval(track));
   shell(Q,el('p',{class:'center',style:'font-size:.9rem',text:'Фото поступово проявляється. Чим раніше вгадаєш, тим більше очок!'}),cv,...btns,fb);
@@ -1620,7 +1621,7 @@ function spotScreen(Q){
     b.addEventListener('click',()=>{ if(state.answered) return; measure();
       btns.forEach(x=>{x.disabled=true; if(x.textContent===correct) x.classList.add('correct');});
       const ok=o===correct; if(!ok) b.classList.add('wrong'); dark.classList.add('gone');
-      resolve(Q,ok?1:0,fb,{gain: ok ? Math.round(POINTS*(1-.4*Math.min(1,rev)))+(state.streak>0?STREAK_BONUS*state.streak:0) : 0, answer:correct, detail: ok?`Відкрито ${Math.round(rev*100)}% фото`:''}); });
+      resolve(Q,ok?1:0,fb,{gain: ok ? Math.round(POINTS*(1-.4*Math.min(1,rev)))+(state.streak>0?sb(state.streak):0) : 0, answer:correct, detail: ok?`Відкрито ${Math.round(rev*100)}% фото`:''}); });
     return b; });
   shell(Q, el('p',{class:'center',style:'font-size:.9rem',text:'Фото закрите темрявою. Води пальцем (чи мишкою), щоб відкривати ділянки. Чим менше відкриєш, тим більше очок!'}), info, wrap, ...btns, fb);
 }
