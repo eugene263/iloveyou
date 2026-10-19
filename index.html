@@ -128,6 +128,11 @@
   .ach small{display:block;font-size:.7rem;line-height:1.1;margin-top:2px}
   .ticket{border:4px dashed var(--pink-400);border-radius:22px;background:#fff;padding:18px;margin-bottom:6px}
   .ticket p{margin:0 0 8px}
+  .gift-btn{background:linear-gradient(120deg,#ff5fa2,#ffb347,#ff5fa2,#b86bff);background-size:300% 300%;animation:giftgrad 3s linear infinite,giftpulse 1.4s ease-in-out infinite;box-shadow:0 6px 0 #c9357a,0 0 22px rgba(255,95,162,.7);position:relative;overflow:hidden;font-size:1.15rem}
+  .gift-btn::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.7),transparent);transform:skewX(-20deg);animation:giftshine 2.2s ease-in-out infinite}
+  @keyframes giftgrad{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+  @keyframes giftpulse{50%{transform:scale(1.06)}}
+  @keyframes giftshine{0%{left:-60%}60%,100%{left:130%}}
   .ticket .qphoto{max-height:none;height:auto;object-fit:contain}
 
   .srow{background:#fff;border:3px solid var(--pink-200);border-radius:18px;padding:12px 14px;margin-bottom:12px}
@@ -1072,7 +1077,7 @@ function resultScreen(){
         el('div',{class:'achs'},ids.map(id=>el('div',{class:'ach'+(state.ach.has(id)?' on':''),title:ACH[id][2]},
           el('span',{text:state.ach.has(id)?ACH[id][0]:'🔒'}),el('small',{text:ACH[id][1]})))));})(),
     el('button',{class:'btn ghost',style:'margin:14px 0 0',text:`🎁 Мої призи за бали: ${state.lvl.size}/${LEVELS.length}`,onclick:openRewards}),
-    el('button',{class:'btn',style:'margin-top:18px',text:'🎁 Відкрити подарунок',onclick:ticketScreen}),
+    el('button',{class:'btn gift-btn',style:'margin-top:18px',text:'🎁 Відкрити подарунок',onclick:ticketScreen}),
     el('button',{class:'btn',style:'margin-top:20px',text:'Зіграти ще раз 🔁',onclick:()=>{ resetState(); introScreen(); }}),
     el('button',{class:'btn ghost',text:'Показати результат 📸',onclick:()=>confetti(80)})
   ));
@@ -1505,6 +1510,11 @@ function mapScreen(Q){
 
 /* --- 🖼️ піксельне фото: Q.image (або Q.emoji), Q.options (перший — правильний) --- */
 function pixelScreen(Q){
+  state.answered=false;
+  shell(Q,el('p',{class:'center',text:'Фото буде поступово проявлятися. Чим раніше вгадаєш, тим більше очок. Готова?'}),
+    el('button',{class:'btn',text:'Готова! ▶️',onclick:()=>pixelPlay(Q)}));
+}
+function pixelPlay(Q){
   state.answered=false; const fb=el('div');
   const cv=el('canvas',{class:'pcv',width:'300',height:'300'}), ctx=cv.getContext('2d');
   const src=document.createElement('canvas'); src.width=src.height=300; const sx=src.getContext('2d');
